@@ -36,7 +36,7 @@ app.post("/createUser", async (req, res) => {
     });
 
     // Set up a Firestore reference for the new user
-    const userRef = db.collection("users").doc(userRecord.uid);
+    const userRef = db.collection("Users").doc(userRecord.uid);
     await userRef.set({
       email: userRecord.email,
       display_name: userRecord.displayName,
