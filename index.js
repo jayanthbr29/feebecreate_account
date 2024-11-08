@@ -42,7 +42,7 @@ app.post("/createUser", async (req, res) => {
       display_name: userRecord.displayName,
       user_role: user_role,
       phone_number: phone_number,
-      createdAt: FieldValue.serverTimestamp(),
+      created_time: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(), // Include updatedAt for later use
     });
 
