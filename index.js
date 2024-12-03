@@ -66,6 +66,38 @@ app.post("/createUser", async (req, res) => {
     res.status(500).send({ message: "Error creating user", error: error.message });
   }
 });
+// DELETE /deleteUser/:uid endpoint to delete a user
+app.delete("/deleteUser/:uid", async (req, res) => {
+  const { uid } = req.params;
+
+  if (!uid) {
+    return res.status(400).send({ message: "Missing user UID" });
+  }
+
+  try {
+    // Delete user from Firebase Authentication
+    await admin.auth().deleteUser(uid);
+
+    // Delete the user's Firestore document if it exists
+    const userRef = db.collection("Users").doc(uid);
+    const userDoc = await userRef.get();
+
+    if (userDoc.exists) {
+      await userRef.delete();
+      console.log(`Firestore document for UID ${uid} deleted successfully.`);
+    } else {
+      console.log(`No Firestore document found for UID ${uid}.`);
+    }
+
+    // Return success response
+    res.status(200).send({
+      message: `User with UID ${uid} deleted successfully from Authentication and Firestore.`,
+    });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    res.status(500).send({ message: "Error deleting user", error: error.message });
+  }
+});
 
 app.listen(3000, () => {
   console.log("Server running on port 3000");
