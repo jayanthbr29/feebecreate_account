@@ -13,24 +13,12 @@ exports.sendScheduledNotifications = async () => {
         const targetDate = new Date(today);
         targetDate.setDate(targetDate.getDate() +1);
         // targetDate.setHours(0, 0, 0, 0); // Set to midnight
-        console.log("targetDate", targetDate);
         const startOfDay = admin.firestore.Timestamp.fromDate(targetDate);
         // const endOfDay = admin.firestore.Timestamp.fromDate(new Date(targetDate.getTime() + 24 * 60 * 60 * 1000));
         const endOfDay = new Date(targetDate);
-        endOfDay.setDate(endOfDay.getDate() +1);
+        endOfDay.setDate(endOfDay.getDate() +2);
         // Convert seconds to a JavaScript Date object
-        const date = new Date(endOfDay._seconds * 1000);
-
-        // Extract hours and minutes
-        const hours = date.getHours();
-        const minutes = date.getMinutes();
-
-        // Format hours and minutes to "6:30" format
-        const formattedTime = `${hours % 12 || 12}:${minutes.toString().padStart(2, '0')} ${hours >= 12 ? 'PM' : 'AM'}`;
-
-        console.log(formattedTime); // Outputs: "6:30 PM"
-        console.log("start of the day", new Date(startOfDay), "endOdDay", new Date(endOfDay));
-
+     
         // Query all documents in the 'notices' collection
         const noticesSnapshot = await db.collection('School').get();
 
@@ -57,12 +45,12 @@ exports.sendScheduledNotifications = async () => {
 
 
             // Filter notices occurring on the target date
-            // const todaysNotices = notices.filter(notice => {
-            //     const noticeDate = notice.Event_date.toDate();
-            //     return noticeDate >= targetDate && noticeDate < endOfDay;
-            // });
+            const todaysNotices = notices.filter(notice => {
+                const noticeDate = notice.Event_date.toDate();
+                return noticeDate >= targetDate && noticeDate < endOfDay;
+            });
 
-            // if (todaysNotices.length === 0) continue; // No notices for tomorrow in this document
+            if (todaysNotices.length === 0) continue; // No notices for tomorrow in this document
 
 
 
@@ -104,8 +92,8 @@ exports.sendScheduledNotifications = async () => {
         // Send notifications in batches
         const response = await sendNotificationsInBatches(allNotifications);
 
-        console.log('Notifications sent successfully:', response);
-        return allNotifications2;
+        console.log('Notifications sent successfully:', response.body);
+        return response;
     } catch (error) {
         console.error('Error sending scheduled notifications:', error);
     }
@@ -120,7 +108,6 @@ exports.sendScheduledNotifications = async () => {
  */
 const sendNotificationsInBatches = async (notifications) => {
     const allResponses = [];
-    // console.log("notifications", notifications);
 
     for (const notification of notifications) {
         const { tokens, payload } = notification;
@@ -130,8 +117,7 @@ const sendNotificationsInBatches = async (notifications) => {
 
         if(batches.length === 0) continue;
         for (const batchTokens of batches) {
-            // console.log("notifications", batchTokens);
-            const response = await admin.messaging().sendMulticast({
+            const response = await admin.messaging().sendEachForMulticast({
                 tokens: batchTokens,
                 ...payload,
             });
