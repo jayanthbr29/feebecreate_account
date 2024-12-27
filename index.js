@@ -1,5 +1,6 @@
 const express = require("express");
 const admin = require("./firebaseConfig"); // Import initialized Firebase Admin SDK
+const { sendScheduledNotifications } = require("./scheduleJob");
 
 const app = express();
 app.use(express.json());
@@ -101,4 +102,18 @@ app.delete("/deleteUser/:uid", async (req, res) => {
 
 app.listen(3000, () => {
   console.log("Server running on port 3000");
+});
+
+
+app.get("/sendNotification", async (req, res) => {  
+
+  try { 
+
+    const data=await sendScheduledNotifications();
+   
+    res.status(200).send({ message: "Notification sent successfully", data });
+  } catch (error) {
+    console.error("Error sending notification:", error);
+    res.status(500).send({ message: "Error sending notification", error: error.message });
+  }
 });
