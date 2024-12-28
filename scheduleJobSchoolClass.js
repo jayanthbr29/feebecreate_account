@@ -4,7 +4,7 @@ const db = admin.firestore();
 const FieldValue = admin.firestore.FieldValue;
 
 
-exports.sendScheduledNotifications = async () => {
+exports.sendScheduledNotificationsSchoolClass = async () => {
     try {
         const now = admin.firestore.Timestamp.now();
         const today = now.toDate();
@@ -20,7 +20,7 @@ exports.sendScheduledNotifications = async () => {
         // Convert seconds to a JavaScript Date object
      
         // Query all documents in the 'notices' collection
-        const noticesSnapshot = await db.collection('School').get();
+        const noticesSnapshot = await db.collection('School_class').get();
 
         let allNotifications = [];
         let allNotifications2 = [];
@@ -31,14 +31,14 @@ exports.sendScheduledNotifications = async () => {
             const data = doc.data();
 
             // console.log("data", data);
-            const notices = data.Calendar_list || [];
-            // allNotifications.push(notices);
+            const notices = data.calendar || [];
+            // allNotifications.push(data);
 
             // console.log("notices", notices);
-            const teachers = data.listOfteachersuser || [];
+            const teachers = data.listOfteachersUser || [];
 
             let parents = [];
-            data.student_data_list?.forEach((item) => {
+            data.student_data?.forEach((item) => {
                 parents = parents.concat(item.parent_list);
             })
 
@@ -64,7 +64,7 @@ exports.sendScheduledNotifications = async () => {
 
             const combinedTokens = [...teacherTokens, ...parentTokens];
 
-            // if (combinedTokens.length === 0) continue; // No tokens to send to
+            if (combinedTokens.length === 0) continue; // No tokens to send to
 
             // Create notification payloads for each notice
             notices.forEach(notice => {
@@ -82,11 +82,11 @@ exports.sendScheduledNotifications = async () => {
                 });
             });
 
-            allNotifications2.push({// test ata sent
-                notices,
-                teacherTokens,
-                parentTokens,
-            })
+            // allNotifications.push({// test ata sent
+            //     notices,
+            //     teacherTokens,
+            //     parentTokens,
+            // })
         }
 
         // Send notifications in batches
