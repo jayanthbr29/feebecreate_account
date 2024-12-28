@@ -11,12 +11,12 @@ exports.sendScheduledNotifications = async () => {
 
         // Calculate the target date (next day)
         const targetDate = new Date(today);
-        targetDate.setDate(targetDate.getDate() +1);
-        // targetDate.setHours(0, 0, 0, 0); // Set to midnight
+        targetDate.setDate(targetDate.getDate()+1 );
+        targetDate.setHours(0, 0, 0, 0); // Set to midnight
         const startOfDay = admin.firestore.Timestamp.fromDate(targetDate);
         // const endOfDay = admin.firestore.Timestamp.fromDate(new Date(targetDate.getTime() + 24 * 60 * 60 * 1000));
         const endOfDay = new Date(targetDate);
-        endOfDay.setDate(endOfDay.getDate() +2);
+        endOfDay.setDate(endOfDay.getDate() +1);
         // Convert seconds to a JavaScript Date object
      
         // Query all documents in the 'notices' collection
@@ -41,7 +41,7 @@ exports.sendScheduledNotifications = async () => {
             data.student_data_list?.forEach((item) => {
                 parents = parents.concat(item.parent_list);
             })
-
+          
 
 
             // Filter notices occurring on the target date
@@ -49,7 +49,7 @@ exports.sendScheduledNotifications = async () => {
                 const noticeDate = notice.Event_date.toDate();
                 return noticeDate >= targetDate && noticeDate < endOfDay;
             });
-
+           
             if (todaysNotices.length === 0) continue; // No notices for tomorrow in this document
 
 
@@ -67,7 +67,7 @@ exports.sendScheduledNotifications = async () => {
             // if (combinedTokens.length === 0) continue; // No tokens to send to
 
             // Create notification payloads for each notice
-            notices.forEach(notice => {
+            todaysNotices.forEach(notice => {
                 const payload = {
                     notification: {
                         title: notice.Event_Title || 'Notification',
@@ -82,11 +82,11 @@ exports.sendScheduledNotifications = async () => {
                 });
             });
 
-            allNotifications2.push({// test ata sent
-                notices,
-                teacherTokens,
-                parentTokens,
-            })
+            // allNotifications2.push({// test ata sent
+            //     notices,
+            //     teacherTokens,
+            //     parentTokens,
+            // })
         }
 
         // Send notifications in batches
