@@ -11,12 +11,11 @@ exports.sendScheduledNotificationsSchoolClass = async () => {
 
         // Calculate the target date (next day)
         const targetDate = new Date(today);
-        targetDate.setDate(targetDate.getDate() +1);
-        // targetDate.setHours(0, 0, 0, 0); // Set to midnight
+        targetDate.setDate(targetDate.getDate()+1 ); // Set to midnight
         const startOfDay = admin.firestore.Timestamp.fromDate(targetDate);
         // const endOfDay = admin.firestore.Timestamp.fromDate(new Date(targetDate.getTime() + 24 * 60 * 60 * 1000));
         const endOfDay = new Date(targetDate);
-        endOfDay.setDate(endOfDay.getDate() +2);
+        endOfDay.setDate(endOfDay.getDate() +1);
         // Convert seconds to a JavaScript Date object
      
         // Query all documents in the 'notices' collection
@@ -52,8 +51,6 @@ exports.sendScheduledNotificationsSchoolClass = async () => {
 
             if (todaysNotices.length === 0) continue; // No notices for tomorrow in this document
 
-
-
             // Fetch FCM tokens
             const teacherTokens = await getFCMTokens(teachers);
             const parentTokens = await getFCMTokens(parents);
@@ -67,7 +64,7 @@ exports.sendScheduledNotificationsSchoolClass = async () => {
             if (combinedTokens.length === 0) continue; // No tokens to send to
 
             // Create notification payloads for each notice
-            notices.forEach(notice => {
+            todaysNotices.forEach(notice => {
                 const payload = {
                     notification: {
                         title: notice.Event_Title || 'Notification',
