@@ -2,6 +2,8 @@ const express = require("express");
 const admin = require("./firebaseConfig"); // Import initialized Firebase Admin SDK
 const { sendScheduledNotifications } = require("./scheduleJob");
 const { sendScheduledNotificationsSchoolClass } = require("./scheduleJobSchoolClass");
+const { sendScheduledNotificationsSameDay } = require("./scheduleJobSameDay");
+const { sendScheduledNotificationsSchoolClassSameDay } = require("./scheduleJobSchoolClassSameDay");
 
 const app = express();
 app.use(express.json());
@@ -110,8 +112,11 @@ app.get("/sendNotification", async (req, res) => {
 
   try { 
     const SchoolClass = await sendScheduledNotificationsSchoolClass();
+    const SchoolClassSameDay= await sendScheduledNotificationsSchoolClassSameDay();
 
     const School=await sendScheduledNotifications();
+    const SchoolSameDay=  await sendScheduledNotificationsSameDay();
+
    
     res.status(200).send({ message: "Notification sent successfully",School:School, SchoolClass: SchoolClass });
   } catch (error) {
