@@ -4,6 +4,7 @@ const { sendScheduledNotifications } = require("./scheduleJob");
 const { sendScheduledNotificationsSchoolClass } = require("./scheduleJobSchoolClass");
 const { sendScheduledNotificationsSameDay } = require("./scheduleJobSameDay");
 const { sendScheduledNotificationsSchoolClassSameDay } = require("./scheduleJobSchoolClassSameDay");
+const { deleteOldNotifications } = require("./notificationRemoveJob");
 
 const app = express();
 app.use(express.json());
@@ -116,9 +117,10 @@ app.get("/sendNotification", async (req, res) => {
 
     const School=await sendScheduledNotifications();
     const SchoolSameDay=  await sendScheduledNotificationsSameDay();
+  const data=  await deleteOldNotifications();
 
    
-    res.status(200).send({ message: "Notification sent successfully",School:School, SchoolClass: SchoolClass });
+    res.status(200).send({ message: "Notification sent successfully", School:School, SchoolClass: SchoolClass, SchoolSameDay:SchoolSameDay, SchoolClassSameDay:SchoolClassSameDay,notificationDelete:data });
   } catch (error) {
     console.error("Error sending notification:", error);
     res.status(500).send({ message: "Error sending notification", error: error.message });
