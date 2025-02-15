@@ -5,6 +5,7 @@ const { sendScheduledNotificationsSchoolClass } = require("./scheduleJobSchoolCl
 const { sendScheduledNotificationsSameDay } = require("./scheduleJobSameDay");
 const { sendScheduledNotificationsSchoolClassSameDay } = require("./scheduleJobSchoolClassSameDay");
 const { deleteOldNotifications } = require("./notificationRemoveJob");
+const axios = require("axios");
 
 const app = express();
 app.use(express.json());
@@ -109,20 +110,47 @@ app.listen(3000, () => {
 });
 
 
-app.get("/sendNotification", async (req, res) => {  
+app.get("/sendNotification", async (req, res) => {
 
-  try { 
+  try {
     const SchoolClass = await sendScheduledNotificationsSchoolClass();
-    const SchoolClassSameDay= await sendScheduledNotificationsSchoolClassSameDay();
+    const SchoolClassSameDay = await sendScheduledNotificationsSchoolClassSameDay();
 
-    const School=await sendScheduledNotifications();
-    const SchoolSameDay=  await sendScheduledNotificationsSameDay();
-  const data=  await deleteOldNotifications();
+    const School = await sendScheduledNotifications();
+    const SchoolSameDay = await sendScheduledNotificationsSameDay();
+    const data = await deleteOldNotifications();
 
-   
-    res.status(200).send({ message: "Notification sent successfully", School:School, SchoolClass: SchoolClass, SchoolSameDay:SchoolSameDay, SchoolClassSameDay:SchoolClassSameDay,notificationDelete:data });
+
+    res.status(200).send({ message: "Notification sent successfully", School: School, SchoolClass: SchoolClass, SchoolSameDay: SchoolSameDay, SchoolClassSameDay: SchoolClassSameDay, notificationDelete: data });
   } catch (error) {
     console.error("Error sending notification:", error);
     res.status(500).send({ message: "Error sending notification", error: error.message });
+  }
+});
+
+app.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).send('Email and password are required');
+  }
+  const Usersnapshot = await db.collection('Users').where('email', '==', email).get();
+  if (Usersnapshot.empty) {
+    res.status(200).send({ success: false, message: "email doesnot exists" });
+
+  } else {
+    const apiKey = 'AIzaSyALJ5R9lmKbxp6r2lVpKUc9_z3sb1tBJVY'; //This is required to identify your project
+    const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`;
+    try {
+      const { data } = await axios.post(url, {
+        email,
+        password,
+        returnSecureToken: true,
+      });
+
+      return res.status(200).json({ success: true, message: 'Login successful', idToken: data.idToken, user: data });
+    } catch (e) {
+
+      return res.status(200).json({ success: false, message: 'Invalid credentials (email or password)' });
+    }
   }
 });
