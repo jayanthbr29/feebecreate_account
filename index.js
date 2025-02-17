@@ -135,7 +135,7 @@ app.post('/login', async (req, res) => {
   }
   const Usersnapshot = await db.collection('Users').where('email', '==', email).get();
   if (Usersnapshot.empty) {
-    res.status(200).send({ success: false, message: "email doesnot exists" });
+    res.status(200).send({ success: false, message: "Invalid Email" });
 
   } else {
     const apiKey = 'AIzaSyALJ5R9lmKbxp6r2lVpKUc9_z3sb1tBJVY'; //This is required to identify your project
@@ -144,13 +144,12 @@ app.post('/login', async (req, res) => {
       const { data } = await axios.post(url, {
         email,
         password,
-        returnSecureToken: true,
+        // returnSecureToken: true,
       });
 
       return res.status(200).json({ success: true, message: 'Login successful', idToken: data.idToken, user: data });
     } catch (e) {
-
-      return res.status(200).json({ success: false, message: 'Invalid credentials (email or password)' });
+      return res.status(200).json({ success: false, message: "Invalid Password" });
     }
   }
 });
