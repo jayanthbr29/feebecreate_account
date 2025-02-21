@@ -153,3 +153,46 @@ app.post('/login', async (req, res) => {
     }
   }
 });
+
+app.get("/search", async (req, res) => {
+  try {
+    // Retrieve 'school_name' from query params
+    const { school_name, admin_name } = req.query;
+
+    if (!school_name && !admin_name) {
+      return res.status(400).send({ success: false, message: "School name or Admin name is required" });
+    }
+    if (school_name && admin_name) {
+      return res.status(400).send({ success: false, message: "Please enter either School name or Admin name" });
+    }
+    if (school_name) {
+      const schoolSnapshot = await db.collection("School")
+        .where("school_details.school_name", "==", school_name)
+        .get();
+
+      if (schoolSnapshot.empty) {
+        return res.status(200).send({ success: false, message: "No school found with that name" });
+      } else {
+        const schoolData = schoolSnapshot.docs.map(doc => doc.data());
+        return res.status(200).send({ success: true, message: "School(s) found", data: schoolData });
+      }
+    }
+    if (admin_name) {
+      const schoolSnapshot = await db.collection("School")
+        .where("principal_details.principal_name", "==", admin_name)
+        .get();
+
+      if (schoolSnapshot.empty) {
+        return res.status(200).send({ success: false, message: "No school found with that principal" });
+      } else {
+        const schoolData = schoolSnapshot.docs.map(doc => doc.data());
+        return res.status(200).send({ success: true, message: "School(s) found", data: schoolData });
+      }
+    }
+
+  } catch (error) {
+    console.error("Error fetching school data:", error);
+    return res.status(500).send({ success: false, message: "An error occurred", error: error.message });
+  }
+});
+
