@@ -110,14 +110,28 @@ app.listen(3000, () => {
 });
 
 
-app.get("/sendNotification", async (req, res) => {
+app.get("/sendNotificationSameDay", async (req, res) => {
 
   try {
-    const SchoolClass = await sendScheduledNotificationsSchoolClass();
+    
     const SchoolClassSameDay = await sendScheduledNotificationsSchoolClassSameDay();
+    const SchoolSameDay = await sendScheduledNotificationsSameDay();
+    const data = await deleteOldNotifications();
+
+
+    res.status(200).send({ message: "Notification sent successfullySameDay", School: School, SchoolClass: SchoolClass, SchoolSameDay: SchoolSameDay, SchoolClassSameDay: SchoolClassSameDay, notificationDelete: data });
+  } catch (error) {
+    console.error("Error sending notification:", error);
+    res.status(500).send({ message: "Error sending notification", error: error.message });
+  }
+});
+
+app.get("/sendnotification", async (req, res) => {
+  try {
+    const SchoolClass = await sendScheduledNotificationsSchoolClass();
+   
 
     const School = await sendScheduledNotifications();
-    const SchoolSameDay = await sendScheduledNotificationsSameDay();
     const data = await deleteOldNotifications();
 
 
@@ -126,7 +140,9 @@ app.get("/sendNotification", async (req, res) => {
     console.error("Error sending notification:", error);
     res.status(500).send({ message: "Error sending notification", error: error.message });
   }
-});
+
+}
+);
 
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
