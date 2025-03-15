@@ -15,7 +15,7 @@
     "crons": [
     {
       "path": "/sendNotificationSameDay",
-      "schedule": "50 11 * * *"
+      "schedule": "00 7 * * *"
     },
     {
       "path": "/sendNotification",
