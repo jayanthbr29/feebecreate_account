@@ -12,6 +12,8 @@ exports.sendScheduledNotificationsSchoolClass = async () => {
         // Calculate the target date (next day)
         const targetDate = new Date(today);
         targetDate.setDate(targetDate.getDate()+1 ); // Set to midnight
+        targetDate.setHours(0, 0, 0, 0);
+        console.log("targetDate 11 ", targetDate);
         const startOfDay = admin.firestore.Timestamp.fromDate(targetDate);
         // const endOfDay = admin.firestore.Timestamp.fromDate(new Date(targetDate.getTime() + 24 * 60 * 60 * 1000));
         const endOfDay = new Date(targetDate);
@@ -48,7 +50,7 @@ exports.sendScheduledNotificationsSchoolClass = async () => {
                 const noticeDate = notice.Event_date.toDate();
                 return noticeDate >= targetDate && noticeDate < endOfDay;
             });
-
+           allNotifications2.push(todaysNotices);
             if (todaysNotices.length === 0) continue; // No notices for tomorrow in this document
 
             // Fetch FCM tokens
@@ -89,7 +91,7 @@ exports.sendScheduledNotificationsSchoolClass = async () => {
         // Send notifications in batches
         const response = await sendNotificationsInBatches(allNotifications);
 
-        console.log('Notifications sent successfully:', response);
+        // console.log('Notifications sent successfully:', response, allNotifications2);
         return response;
     } catch (error) {
         console.error('Error sending scheduled notifications:', error);
@@ -153,7 +155,7 @@ const getFCMTokens = async (refs) => {
 
     try {
         // Fetch all users in parallel
-        const userPromises = refs.map(ref => ref.get());
+        const userPromises = refs?.map(ref => ref?.get());
         const userDocs = await Promise.all(userPromises);
 
         // For each user document, fetch the 'fcm_tokens' sub-collection
