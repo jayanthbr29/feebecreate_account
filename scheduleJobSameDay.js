@@ -41,6 +41,8 @@ exports.sendScheduledNotificationsSameDay = async () => {
             data.student_data_list?.forEach((item) => {
                 parents = parents.concat(item.parent_list);
             })
+            let admins= data.listOfAdmin || [];
+            const adminTokens = await getFCMTokens(admins);
           
 
             // Filter notices occurring on the target date
@@ -60,7 +62,7 @@ exports.sendScheduledNotificationsSameDay = async () => {
             // console.log("teacherTokens", teacherTokens);
             // console.log("parentTokens", parentTokens);
 
-            const combinedTokens = [...teacherTokens, ...parentTokens];
+            const combinedTokens = [...teacherTokens, ...parentTokens, ...adminTokens];
 
             // if (combinedTokens.length === 0) continue; // No tokens to send to
 

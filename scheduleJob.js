@@ -1,4 +1,5 @@
 
+const { all } = require("axios");
 const admin = require("./firebaseConfig"); // Import initialized Firebase Admin SDK
 const db = admin.firestore();
 const FieldValue = admin.firestore.FieldValue;
@@ -13,6 +14,7 @@ exports.sendScheduledNotifications = async () => {
         const targetDate = new Date(today);
         targetDate.setDate(targetDate.getDate()+1 );
         targetDate.setHours(0, 0, 0, 0); // Set to midnight
+        console.log("targetDate 12 ", targetDate);
         const startOfDay = admin.firestore.Timestamp.fromDate(targetDate);
         // const endOfDay = admin.firestore.Timestamp.fromDate(new Date(targetDate.getTime() + 24 * 60 * 60 * 1000));
         const endOfDay = new Date(targetDate);
@@ -41,6 +43,7 @@ exports.sendScheduledNotifications = async () => {
             data.student_data_list?.forEach((item) => {
                 parents = parents.concat(item.parent_list);
             })
+            let admins= data.listOfAdmin || [];
           
 
 
@@ -57,12 +60,13 @@ exports.sendScheduledNotifications = async () => {
             // Fetch FCM tokens
             const teacherTokens = await getFCMTokens(teachers);
             const parentTokens = await getFCMTokens(parents);
+            const adminTokens = await getFCMTokens(admins);
 
 
             // console.log("teacherTokens", teacherTokens);
             // console.log("parentTokens", parentTokens);
 
-            const combinedTokens = [...teacherTokens, ...parentTokens];
+            const combinedTokens = [...teacherTokens, ...parentTokens,...adminTokens];
 
             // if (combinedTokens.length === 0) continue; // No tokens to send to
 
@@ -92,7 +96,7 @@ exports.sendScheduledNotifications = async () => {
         // Send notifications in batches
         const response = await sendNotificationsInBatches(allNotifications);
 
-        console.log('Notifications sent successfully:', response);
+        // console.log('Notifications sent successfully:', response);
         return response;
     } catch (error) {
         console.error('Error sending scheduled notifications:', error);
@@ -156,7 +160,7 @@ const getFCMTokens = async (refs) => {
 
     try {
         // Fetch all users in parallel
-        const userPromises = refs.map(ref => ref.get());
+        const userPromises = refs?.map(ref => ref?.get());
         const userDocs = await Promise.all(userPromises);
 
         // For each user document, fetch the 'fcm_tokens' sub-collection

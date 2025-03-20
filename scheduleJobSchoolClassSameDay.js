@@ -11,8 +11,9 @@ exports.sendScheduledNotificationsSchoolClassSameDay = async () => {
 
         // Calculate the target date (next day)
         const targetDate = new Date(today);
-        console.log("targetDate", targetDate);
         targetDate.setHours(0, 0, 0, 0);
+        console.log("targetDate", targetDate);
+        console.log("targetDate in local time:", targetDate.toLocaleString());
         // targetDate.setDate(targetDate.getDate()+1 ); // Set to midnight
         const startOfDay = admin.firestore.Timestamp.fromDate(targetDate);
         // const endOfDay = admin.firestore.Timestamp.fromDate(new Date(targetDate.getTime() + 24 * 60 * 60 * 1000));
@@ -154,12 +155,12 @@ const getFCMTokens = async (refs) => {
 
     try {
         // Fetch all users in parallel
-        const userPromises = refs.map(ref => ref.get());
+        const userPromises = refs?.map(ref => ref?.get());
         const userDocs = await Promise.all(userPromises);
 
         // For each user document, fetch the 'fcm_tokens' sub-collection
         const tokenPromises = userDocs.map(async (userDoc) => {
-            if (userDoc.exists) {
+            if (userDoc?.exists) {
                 const fcmTokensSnapshot = await userDoc.ref.collection('fcm_tokens').get();
                 fcmTokensSnapshot.forEach(tokenDoc => {
                     const tokenData = tokenDoc.data();

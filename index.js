@@ -128,14 +128,14 @@ app.get("/sendNotificationSameDay", async (req, res) => {
 
 app.get("/sendnotification", async (req, res) => {
   try {
-    const SchoolClass = await sendScheduledNotificationsSchoolClass();
+    // const SchoolClass = await sendScheduledNotificationsSchoolClass();
    
 
     const School = await sendScheduledNotifications();
     const data = await deleteOldNotifications();
 
 
-    res.status(200).send({ message: "Notification sent successfully", School: School, SchoolClass: SchoolClass,  notificationDelete: data });
+    res.status(200).send({ message: "Notification sent successfully", School: School, SchoolClass: "SchoolClass",  notificationDelete: data });
   } catch (error) {
     console.error("Error sending notification:", error);
     res.status(500).send({ message: "Error sending notification", error: error.message });
@@ -149,7 +149,8 @@ app.post('/login', async (req, res) => {
   if (!email || !password) {
     return res.status(400).send('Email and password are required');
   }
-  const Usersnapshot = await db.collection('Users').where('email', '==', email).get();
+  const lowerCaseEmail = email.toLowerCase();
+  const Usersnapshot = await db.collection('Users').where('email', '==', lowerCaseEmail).get();
   if (Usersnapshot.empty) {
     res.status(200).send({ success: false, message: "Invalid Email" });
 
