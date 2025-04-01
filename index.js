@@ -234,193 +234,194 @@ app.post('/send-email', async (req, res) => {
 
       // Email template
       const emailTemplate = `
-     <!DOCTYPE html>
+    <!DOCTYPE html>
 <html lang="en">
-
+ 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Account Created</title>
-  <style>
-      body {
-          font-family: 'Nunito', sans-serif;
-          background-color: #f5f5f5;
-          margin: 0;
-          padding: 0;
-      }
-
-      .container {
-          max-width: 600px;
-          margin: 20px auto;
-          background-color: #ffffff;
-          border-radius: 10px;
-          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-          overflow: hidden;
-      }
-
-      .header {
-          background-color: #0052cc;
-          text-align: center;
-          padding: 20px;
-
-          display: flex;
-          justify-content: center;
-          align-items: center;
-      }
-
-      .circle {
-          width: 25px;
-          height: 25px;
-          border-radius: 50%;
-          background-color: #0052cc;
-          margin-left: 5px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #0052cc;
-      }
-
-      .header-text {
-          background-color: #fff;
-          color: #000;
-          padding: 5px 10px;
-          border-radius: 10px;
-          display: flex;
-          font-size: 24px;
-
-      }
-
-      .content {
-          padding: 20px;
-          text-align: center;
-      }
-
-      .box {
-          border: 1px solid #0052cc;
-          padding: 20px;
-          border-radius: 15px;
-          margin-top: 20px;
-          width: 80%;
-          margin: auto;
-      }
-
-      .credentials {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 20px;
-          margin-top: 10px;
-      }
-
-      .input-box {
-          padding: 15px 40px;
-          width: 60%;
-          border-radius: 5px;
-          text-align: left;
-          font-size: 16px;
-          border: 1px solid #0052cc;
-          color: #333;
-      }
-
-      .footer {
-          text-align: center;
-          padding: 20px;
-          font-size: 14px;
-          color: #666;
-      }
-
-      .app-links {
-          display: flex;
-          justify-content: center;
-          margin-top: 20px;
-      }
-
-      .app-links img {
-          width: 100%;
-      }
-
-      .title {
-          font-size: 20px;
-          color: #000;
-
-      }
-
-      .sub-title {
-          font-size: 16px;
-          color: #000;
-      }
-
-      .hello {
-          font-size: 16px;
-          color: #000;
-          text-align: left;
-      }
-
-      .thankyou {
-          font-size: 16px;
-          color: #001B36;
-          text-align: left;
-          line-height: 1.6;
-      }
-
-      .box-title {
-          color: #000;
-          margin: 10px 0 0 0;
-      }
-
-      .box-subtitle {
-          color: #000;
-          margin: 10px 0 40px 0;
-      }
-
-      .subcontent {
-          color: #000;
-          margin: 30px 0 0 0;
-          font-size: 14px;
-          text-align: left;
-      }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Created</title>
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+ 
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+ 
+        .header {
+            background-color: #0052cc;
+            text-align: center;
+            padding: 20px;
+ 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+ 
+        .circle {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background-color: #0052cc;
+            margin-left: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #0052cc;
+        }
+ 
+        .header-text {
+            background-color: #fff;
+            color: #000;
+            padding: 5px 10px;
+            border-radius: 10px;
+            display: flex;
+            font-size: 24px;
+ 
+        }
+ 
+        .content {
+            padding: 20px;
+            text-align: center;
+        }
+ 
+        .box {
+            border: 1px solid #0052cc;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            width: 80%;
+            margin: auto;
+        }
+ 
+        .credentials {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            margin-top: 10px;
+        }
+ 
+        .input-box {
+            padding: 15px 40px;
+            width: 60%;
+            border-radius: 5px;
+            text-align: left;
+            font-size: 16px;
+            border: 1px solid #0052cc;
+            color: #333;
+        }
+ 
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+ 
+        .app-links {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+ 
+        .app-links img {
+            width: 100%;
+        }
+ 
+        .title {
+            font-size: 20px;
+            color: #000;
+ 
+        }
+ 
+        .sub-title {
+            font-size: 16px;
+            color: #000;
+        }
+ 
+        .hello {
+            font-size: 16px;
+            color: #000;
+            text-align: left;
+        }
+ 
+        .thankyou {
+            font-size: 16px;
+            color: #001B36;
+            text-align: left;
+            line-height: 1.6;
+        }
+ 
+        .box-title {
+            color: #000;
+            margin: 10px 0 0 0;
+        }
+ 
+        .box-subtitle {
+            color: #000;
+            margin: 10px 0 40px 0;
+        }
+ 
+        .subcontent {
+            color: #000;
+            margin: 30px 0 0 0;
+            font-size: 14px;
+            text-align: left;
+        }
+    </style>
 </head>
-
+ 
 <body>
-  <div class="container">
-      <div class="header">
-          <div class="header-text">FEEBE <div class="circle"></div>
-          </div>
-      </div>
-      <div class="content">
-          <h2 class="title">Welcome to <span style="color: #0052cc;">Feebe</span></h2>
-          <p class="sub-title">Fast, Easy, All-in-one <strong style="color: #0052cc;">Platform for Preschools</strong>
-          </p>
-          <p class="hello">Hello,</p>
-          <p class="thankyou">Hello,
-              Thank you for choosing Feebe for your preschool’s management. We understand how much care and attention
-              goes into running a preschool, and we’re committed to providing a reliable, and efficient platform to
-              support you.</p>
-          <div class="box">
-              <h2 class="box-title">Your Account is Successfully Created</h2>
-              <p class="box-subtitle">Your credentials are below</p>
-              <div class="credentials">
-                  <div class="input-box">Email ID: example@gmail.com</div>
-                  <div class="input-box">Password: 9738028615</div>
-              </div>
-              <p class="subcontent">We recommend updating your password after your first login to ensure maximum
-                  security.</p>
-          </div>
-      </div>
-      <div class="footer">
-          <p class="subcontent">We’re excited to see how Feebe transforms your preschool management journey!</p>
-          <div class="app-links">
-              <a href="https://play.google.com/store/apps/details?id=com.digi9.feebe">
-                  <img src="https://firebasestorage.googleapis.com/v0/b/feebee-8578d.firebasestorage.app/o/Frame%20289965%20(1).png?alt=media&token=72e2e7ee-f4c1-4764-9a5c-e537603a3a13"
-                      alt="App Store Link">
-              </a>
-          </div>
-      </div>
-  </div>
+    <div class="container">
+        <div class="header">
+            <div class="header-text">FEEBE <div class="circle"></div>
+            </div>
+        </div>
+        <div class="content">
+            <h2 class="title">Welcome to <span style="color: #0052cc;">Feebe</span></h2>
+            <p class="sub-title">Fast, Easy, All-in-one <strong style="color: #0052cc;">Platform for Preschools</strong>
+            </p>
+            <p class="hello">Hello,</p>
+            <p class="thankyou">Hello,
+                Thank you for choosing Feebe for your preschool’s management. We understand how much care and attention
+                goes into running a preschool, and we’re committed to providing a reliable, and efficient platform to
+                support you.</p>
+            <div class="box">
+                <h2 class="box-title">Your Account is Successfully Created</h2>
+                <p class="box-subtitle">Your credentials are below</p>
+                <div class="credentials">
+                    <div class="input-box">Email ID: ${toEmail}</div>
+                    <div class="input-box">Password: ${password}</div>
+                </div>
+                <p class="subcontent">We recommend updating your password after your first login to ensure maximum
+                    security.</p>
+            </div>
+        </div>
+        <div class="footer">
+            <p class="subcontent">We’re excited to see how Feebe transforms your preschool management journey!</p>
+            <div class="app-links">
+                <a href="https://play.google.com/store/apps/details?id=com.digi9.feebe">
+                    <img src="https://firebasestorage.googleapis.com/v0/b/feebee-8578d.firebasestorage.app/o/Frame%20289965%20(1).png?alt=media&token=72e2e7ee-f4c1-4764-9a5c-e537603a3a13"
+                        alt="App Store Link">
+                </a>
+            </div>
+        </div>
+    </div>
 </body>
-
+ 
 </html>
+ 
       `;
 
       // Mail options
