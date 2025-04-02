@@ -223,12 +223,12 @@ app.post('/send-email', async (req, res) => {
   try {
       // Configure transporter
       const transporter = nodemailer.createTransport({
-          host: 'smtp.hostinger.com',
+          host: 'mail.feebe.in',
           port: 465,
           secure: true,
           auth: {
-              user: "Info@gully2global.com",
-              pass: "Shasudigi@217",
+              user: "info@feebe.in",
+              pass: "Qwertyuiop1!@#",
           },
       });
 
@@ -404,7 +404,7 @@ app.post('/send-email', async (req, res) => {
             <td class="content">
                 <h2 class="title">Welcome to <span style="color: #0052cc;">Feebe</span></h2>
                 <p class="sub-title">Fast, Easy, All-in-one <strong style="color: #0052cc;">Platform for Preschools</strong></p>
-                <p class="thankyou">Hello,</p>
+                <p class="thankyou">Hello ${userName},</p>
                 <p class="thankyou">${message}</p>
                 <div class="box">
                     <h2 class="box-title">Your Account is Successfully Created</h2>
