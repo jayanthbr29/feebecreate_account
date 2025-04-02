@@ -114,13 +114,13 @@ app.listen(3000, () => {
 app.get("/sendNotificationSameDay", async (req, res) => {
 
   try {
-    
+
     const SchoolClassSameDay = await sendScheduledNotificationsSchoolClassSameDay();
     const SchoolSameDay = await sendScheduledNotificationsSameDay();
     const data = await deleteOldNotifications();
 
 
-    res.status(200).send({ message: "Notification sent successfullySameDay",  SchoolSameDay: SchoolSameDay, SchoolClassSameDay: SchoolClassSameDay, notificationDelete: data });
+    res.status(200).send({ message: "Notification sent successfullySameDay", SchoolSameDay: SchoolSameDay, SchoolClassSameDay: SchoolClassSameDay, notificationDelete: data });
   } catch (error) {
     console.error("Error sending notification:", error);
     res.status(500).send({ message: "Error sending notification", error: error.message });
@@ -130,13 +130,13 @@ app.get("/sendNotificationSameDay", async (req, res) => {
 app.get("/sendnotification", async (req, res) => {
   try {
     const SchoolClass = await sendScheduledNotificationsSchoolClass();
-   
+
 
     const School = await sendScheduledNotifications();
     const data = await deleteOldNotifications();
 
 
-    res.status(200).send({ message: "Notification sent successfully", School: School, SchoolClass: SchoolClass,  notificationDelete: data });
+    res.status(200).send({ message: "Notification sent successfully", School: School, SchoolClass: SchoolClass, notificationDelete: data });
   } catch (error) {
     console.error("Error sending notification:", error);
     res.status(500).send({ message: "Error sending notification", error: error.message });
@@ -214,26 +214,27 @@ app.get("/search", async (req, res) => {
   }
 });
 app.post('/send-email', async (req, res) => {
-  const { toEmail, userName, password,message } = req.body;
-
-  if (!toEmail || !userName || !password||!message) {
-      return res.status(400).send({ error: 'Missing required fields' });
+  const { toEmail, userName, password,
+     message= "Thank you for choosing Feebe for your preschool’s management. We understand how much care and attention goes into running a preschool, and we’re committed to providing a reliable, and efficient platform to support you."
+     } = req.body;
+  if (!toEmail || !userName || !password) {
+    return res.status(400).send({ error: 'Missing required fields' });
   }
-
+  
   try {
-      // Configure transporter
-      const transporter = nodemailer.createTransport({
-          host: 'mail.feebe.in',
-          port: 465,
-          secure: true,
-          auth: {
-              user: "info@feebe.in",
-              pass: "Qwertyuiop1!@#",
-          },
-      });
+    // Configure transporter
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.hostinger.com',
+      port: 465,
+      secure: true,
+      auth: {
+        user: "Info@gully2global.com",
+        pass: "Shasudigi@217",
+      },
+    });
 
-      // Email template
-      const emailTemplate = `
+    // Email template
+    const emailTemplate = `
   <!DOCTYPE html>
 <html lang="en">
 
@@ -434,20 +435,20 @@ app.post('/send-email', async (req, res) => {
  
       `;
 
-      // Mail options
-      const mailOptions = {
-          from: "Info@gully2global.com",
-          to: toEmail,
-          subject: "Welcome to Feebee, Your Account Has Been Created Successfully!",
-          html: emailTemplate,
-      };
+    // Mail options
+    const mailOptions = {
+      from: "Info@gully2global.com",
+      to: toEmail,
+      subject: "Welcome to Feebee, Your Account Has Been Created Successfully!",
+      html: emailTemplate,
+    };
 
-      // Send email
-      const info = await transporter.sendMail(mailOptions);
-      res.status(200).send({ message: 'Email sent', info });
+    // Send email
+    const info = await transporter.sendMail(mailOptions);
+    res.status(200).send({ message: 'Email sent', info });
   } catch (error) {
-      console.error('Error sending email:', error);
-      res.status(500).send({ error: 'Error sending email', details: error.message });
+    console.error('Error sending email:', error);
+    res.status(500).send({ error: 'Error sending email', details: error.message });
   }
 });
 
