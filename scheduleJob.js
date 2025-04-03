@@ -62,7 +62,6 @@ exports.sendScheduledNotifications = async () => {
             const parentTokens = await getFCMTokens(parents);
             const adminTokens = await getFCMTokens(admins);
 
-
             // console.log("teacherTokens", teacherTokens);
             // console.log("parentTokens", parentTokens);
 

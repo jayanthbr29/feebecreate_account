@@ -11,25 +11,51 @@ exports.sendScheduledNotificationsSchoolClass = async () => {
 
         // Calculate the target date (next day)
         const targetDate = new Date(today);
-        targetDate.setDate(targetDate.getDate()+1 ); // Set to midnight
+        targetDate.setDate(targetDate.getDate() + 1); // Set to midnight
         targetDate.setHours(0, 0, 0, 0);
         console.log("targetDate 11 ", targetDate);
         const startOfDay = admin.firestore.Timestamp.fromDate(targetDate);
         // const endOfDay = admin.firestore.Timestamp.fromDate(new Date(targetDate.getTime() + 24 * 60 * 60 * 1000));
         const endOfDay = new Date(targetDate);
-        endOfDay.setDate(endOfDay.getDate() +1);
+        endOfDay.setDate(endOfDay.getDate() + 1);
         // Convert seconds to a JavaScript Date object
-     
+
         // Query all documents in the 'notices' collection
         const noticesSnapshot = await db.collection('School_class').get();
 
         let allNotifications = [];
         let allNotifications2 = [];
+      
         // console.log("noticesSnapshot", noticesSnapshot);
 
         // Iterate through each document
         for (const doc of noticesSnapshot.docs) {
             const data = doc.data();
+            const docRef = doc.ref;
+            let listOfAdmins = [];
+
+            try {
+                const schoolSnapshot = await db.collection('School')
+                    .where('List_of_class', 'array-contains', docRef)  // docRef must be a DocumentReference
+                    .get();
+
+
+                // Check if we got any matching school document
+                if (!schoolSnapshot.empty) {
+                    schoolSnapshot.forEach(schoolDoc => {
+                        const schoolData = schoolDoc.data();
+                        const ListOfAdmins = schoolData.listOfAdmin || [];  // Assuming listOfAdmin holds references to admin users
+                        listOfAdmins = listOfAdmins.concat(ListOfAdmins);
+                        // console.log('Matched School:', schoolData);
+                        // console.log('List of Admins:', ListOfAdmins);
+
+                    });
+                } else {
+                    console.log('No matching school found for the given class reference');
+                }
+            } catch (error) {
+                console.error('Error fetching school document:', error);
+            }
 
             // console.log("data", data);
             const notices = data.calendar || [];
@@ -50,18 +76,18 @@ exports.sendScheduledNotificationsSchoolClass = async () => {
                 const noticeDate = notice.Event_date.toDate();
                 return noticeDate >= targetDate && noticeDate < endOfDay;
             });
-           allNotifications2.push(todaysNotices);
+
             if (todaysNotices.length === 0) continue; // No notices for tomorrow in this document
 
             // Fetch FCM tokens
             const teacherTokens = await getFCMTokens(teachers);
             const parentTokens = await getFCMTokens(parents);
-
+            const adminTokens = await getFCMTokens(listOfAdmins);
 
             // console.log("teacherTokens", teacherTokens);
             // console.log("parentTokens", parentTokens);
 
-            const combinedTokens = [...teacherTokens, ...parentTokens];
+            const combinedTokens = [...teacherTokens, ...parentTokens,...adminTokens];
 
             if (combinedTokens.length === 0) continue; // No tokens to send to
 
@@ -87,7 +113,6 @@ exports.sendScheduledNotificationsSchoolClass = async () => {
             //     parentTokens,
             // })
         }
-
         // Send notifications in batches
         const response = await sendNotificationsInBatches(allNotifications);
 
@@ -114,7 +139,7 @@ const sendNotificationsInBatches = async (notifications) => {
         // Firebase allows sending up to 500 tokens in one batch
         const batches = chunkArray(tokens, 500);
 
-        if(batches.length === 0) continue;
+        if (batches.length === 0) continue;
         for (const batchTokens of batches) {
             const response = await admin.messaging().sendEachForMulticast({
                 tokens: batchTokens,
