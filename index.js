@@ -224,12 +224,12 @@ app.post('/send-email', async (req, res) => {
   try {
     // Configure transporter
     const transporter = nodemailer.createTransport({
-      host: 'mail.feebe.in',
+      host: 'smtp.hostinger.com',
       port: 465,
       secure: true,
       auth: {
-        user: "info@feebe.in",
-        pass: "Qwertyuiop1!@#",
+        user: "Info@gully2global.com",
+        pass: "Shasudigi@217",
       },
     });
 
@@ -437,7 +437,7 @@ app.post('/send-email', async (req, res) => {
 
     // Mail options
     const mailOptions = {
-      from: "info@feebe.in",
+      from: "Info@gully2global.com",
       to: toEmail,
       subject: "Welcome to Feebee, Your Account Has Been Created Successfully!",
       html: emailTemplate,
