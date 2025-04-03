@@ -31,6 +31,31 @@ exports.sendScheduledNotificationsSchoolClassSameDay = async () => {
         // Iterate through each document
         for (const doc of noticesSnapshot.docs) {
             const data = doc.data();
+            const docRef = doc.ref;
+            let listOfAdmins = [];
+
+            try {
+                const schoolSnapshot = await db.collection('School')
+                    .where('List_of_class', 'array-contains', docRef)  // docRef must be a DocumentReference
+                    .get();
+
+
+                // Check if we got any matching school document
+                if (!schoolSnapshot.empty) {
+                    schoolSnapshot.forEach(schoolDoc => {
+                        const schoolData = schoolDoc.data();
+                        const ListOfAdmins = schoolData.listOfAdmin || [];  // Assuming listOfAdmin holds references to admin users
+                        listOfAdmins = listOfAdmins.concat(ListOfAdmins);
+                        // console.log('Matched School:', schoolData);
+                        // console.log('List of Admins:', ListOfAdmins);
+
+                    });
+                } else {
+                    console.log('No matching school found for the given class reference');
+                }
+            } catch (error) {
+                console.error('Error fetching school document:', error);
+            }
 
             // console.log("data", data);
             const notices = data.calendar || [];
@@ -56,12 +81,12 @@ exports.sendScheduledNotificationsSchoolClassSameDay = async () => {
             // Fetch FCM tokens
             const teacherTokens = await getFCMTokens(teachers);
             const parentTokens = await getFCMTokens(parents);
-
+            const adminTokens = await getFCMTokens(listOfAdmins);
 
             // console.log("teacherTokens", teacherTokens);
             // console.log("parentTokens", parentTokens);
 
-            const combinedTokens = [...teacherTokens, ...parentTokens];
+            const combinedTokens = [...teacherTokens, ...parentTokens,...adminTokens];
 
             if (combinedTokens.length === 0) continue; // No tokens to send to
 
