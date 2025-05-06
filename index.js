@@ -215,12 +215,12 @@ app.get("/search", async (req, res) => {
 });
 app.post('/send-email', async (req, res) => {
   const { toEmail, userName, password,
-     message= "Thank you for choosing Feebe for your preschool’s management. We understand how much care and attention goes into running a preschool, and we’re committed to providing a reliable, and efficient platform to support you."
-     } = req.body;
+    message = "Thank you for choosing Feebe for your preschool’s management. We understand how much care and attention goes into running a preschool, and we’re committed to providing a reliable, and efficient platform to support you."
+  } = req.body;
   if (!toEmail || !userName || !password) {
     return res.status(400).send({ error: 'Missing required fields' });
   }
-  
+
   try {
     // Configure transporter
     const transporter = nodemailer.createTransport({
@@ -446,6 +446,445 @@ app.post('/send-email', async (req, res) => {
     // Send email
     const info = await transporter.sendMail(mailOptions);
     res.status(200).send({ message: 'Email sent', info });
+  } catch (error) {
+    console.error('Error sending email:', error);
+    res.status(500).send({ error: 'Error sending email', details: error.message });
+  }
+});
+
+app.post('/send-email/accountRemoved', async (req, res) => {
+  const { parentName,parentDescription, schoolName,staffName,staffDescription, toEmailParent, toEmailStaff, 
+   
+  } = req.body;
+  // if (!toEmail || !userName || !password) {
+  //   return res.status(400).send({ error: 'Missing required fields' });
+  // }
+
+  try {
+    // Configure transporter
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.hostinger.com',
+      port: 465,
+      secure: true,
+      auth: {
+        user: "Info@gully2global.com",
+        pass: "Shasudigi@217",
+      },
+    });
+
+    // Email template
+    const emailTemplateParent = `
+ <!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Created</title>
+    <style>
+        /* Add fallback for email clients that don't support external styles */
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+
+        table {
+            border-spacing: 0;
+            width: 100%;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background-color: #0052cc;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .header-text {
+            color: #000;
+            background-color: #fff;
+            font-size: 24px;
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 10px;
+            font-size: 24px;
+            align-items: center;
+            align-content: center;
+        }
+        .header-text-content{
+            display: flex;
+        }
+        /* .header-text {
+            background-color: #fff;
+            color: #000;
+            padding: 5px 10px;
+            border-radius: 10px;
+            display: flex;
+            font-size: 24px;
+ 
+        } */
+
+
+        .circle {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background-color: #0052cc;
+            margin-left: 5px;
+            display: inline-block;
+        }
+        
+        /* .circle {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background-color: #0052cc;
+            margin-left: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #0052cc;
+        } */
+
+
+        .content {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .box {
+            border: 1px solid #0052cc;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            width: 80%;
+            margin: auto;
+        }
+
+        .credentials {
+            display: block;
+            margin-top: 10px;
+        }
+
+        .input-box {
+            padding: 15px 40px;
+            width: 60%;
+            border-radius: 5px;
+            text-align: left;
+            font-size: 16px;
+            border: 1px solid #0052cc;
+            color: #333;
+            margin: 10px auto;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .app-links img {
+            width: 100%;
+        }
+
+        .title {
+            font-size: 20px;
+            color: #000;
+        }
+
+        .sub-title {
+            font-size: 16px;
+            color: #000;
+        }
+
+        .thankyou {
+            font-size: 16px;
+            color: #001B36;
+            text-align: left;
+            line-height: 1.6;
+        }
+
+        .box-title {
+            color: #000;
+            margin: 10px 0 0 0;
+        }
+
+        .subcontent {
+            color: #000;
+            margin: 30px 0 0 0;
+            font-size: 14px;
+            text-align: left;
+        }
+    </style>
+</head>
+
+<body>
+    <table role="presentation" class="container">
+        <tr>
+            <td class="header">
+                <div class="header-text">
+                    <div class="header-text-content">
+                    FEEBE <div class="circle"></div>
+                </div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="content">
+                <h2 class="title">Welcome to <span style="color: #0052cc;">Feebe</span></h2>
+                <p class="sub-title">Fast, Easy, All-in-one <strong style="color: #0052cc;">Platform for Preschools</strong></p>
+                <p class="thankyou">Hello ${parentName},</p>
+                <p class="thankyou">${parentDescription }</p>
+                <div class="box">
+                  Your account has been removed by <br />
+                  <strong>${schoolName}</strong>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="footer">
+                 <p class="subcontent">If this was done in error or if you have any questions regarding this deletion, please reach out to the school.<br>
+        Thank you for being a part of our community.</p>
+                <div class="app-links">
+                    <a href="https://play.google.com/store/apps/details?id=com.digi9.feebe">
+                        <img src="https://firebasestorage.googleapis.com/v0/b/feebee-8578d.firebasestorage.app/o/Frame%20289965%20(1).png?alt=media&token=72e2e7ee-f4c1-4764-9a5c-e537603a3a13" alt="App Store Link">
+                    </a>
+                </div>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>
+      `;
+
+    // Mail options
+    const mailOptions = {
+      from: "Info@gully2global.com",
+      to: toEmailParent,
+      subject: "Feebee, Your Account Has Been Removed!",
+      html: emailTemplateParent,
+    };
+
+    // Send email
+    const info = await transporter.sendMail(mailOptions);
+    const emailTemplateStaff = `
+   <!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Created</title>
+    <style>
+        /* Add fallback for email clients that don't support external styles */
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+
+        table {
+            border-spacing: 0;
+            width: 100%;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background-color: #0052cc;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .header-text {
+            color: #000;
+            background-color: #fff;
+            font-size: 24px;
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 10px;
+            font-size: 24px;
+            align-items: center;
+            align-content: center;
+        }
+        .header-text-content{
+            display: flex;
+        }
+        /* .header-text {
+            background-color: #fff;
+            color: #000;
+            padding: 5px 10px;
+            border-radius: 10px;
+            display: flex;
+            font-size: 24px;
+ 
+        } */
+
+
+        .circle {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background-color: #0052cc;
+            margin-left: 5px;
+            display: inline-block;
+        }
+        
+        /* .circle {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background-color: #0052cc;
+            margin-left: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #0052cc;
+        } */
+
+
+        .content {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .box {
+            border: 1px solid #0052cc;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            width: 80%;
+            margin: auto;
+        }
+
+        .credentials {
+            display: block;
+            margin-top: 10px;
+        }
+
+        .input-box {
+            padding: 15px 40px;
+            width: 60%;
+            border-radius: 5px;
+            text-align: left;
+            font-size: 16px;
+            border: 1px solid #0052cc;
+            color: #333;
+            margin: 10px auto;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .app-links img {
+            width: 100%;
+        }
+
+        .title {
+            font-size: 20px;
+            color: #000;
+        }
+
+        .sub-title {
+            font-size: 16px;
+            color: #000;
+        }
+
+        .thankyou {
+            font-size: 16px;
+            color: #001B36;
+            text-align: left;
+            line-height: 1.6;
+        }
+
+        .box-title {
+            color: #000;
+            margin: 10px 0 0 0;
+        }
+
+        .subcontent {
+            color: #000;
+            margin: 30px 0 0 0;
+            font-size: 14px;
+            text-align: left;
+        }
+    </style>
+</head>
+
+<body>
+    <table role="presentation" class="container">
+        <tr>
+            <td class="header">
+                <div class="header-text">
+                    <div class="header-text-content">
+                    FEEBE <div class="circle"></div>
+                </div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="content">
+                <h2 class="title">Welcome to <span style="color: #0052cc;">Feebe</span></h2>
+                <p class="sub-title">Fast, Easy, All-in-one <strong style="color: #0052cc;">Platform for Preschools</strong></p>
+                <p class="thankyou">Hello ${staffName},</p>
+                <p class="thankyou">${staffDescription }</p>
+                <div class="box">
+                  Your account has been removed by <br />
+                  <strong>${schoolName}</strong>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="footer">
+                   <p class="subcontent">If you believe this was done in error or if you have any questions regarding this action, please reach out to the school.
+      </p>
+                <div class="app-links">
+                    <a href="https://play.google.com/store/apps/details?id=com.digi9.feebe">
+                        <img src="https://firebasestorage.googleapis.com/v0/b/feebee-8578d.firebasestorage.app/o/Frame%20289965%20(1).png?alt=media&token=72e2e7ee-f4c1-4764-9a5c-e537603a3a13" alt="App Store Link">
+                    </a>
+                </div>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>
+         `;
+         const mailOptionsStaff = {
+          from: "Info@gully2global.com",
+          to: toEmailStaff,
+          subject: "Feebee, Your Account Has Been Removed!",
+          html: emailTemplateStaff,
+        };
+    
+        // Send email
+        const infoStaff = await transporter.sendMail(mailOptionsStaff);
+
+    res.status(200).send({ message: 'Email sent', info , infoStaff});
   } catch (error) {
     console.error('Error sending email:', error);
     res.status(500).send({ error: 'Error sending email', details: error.message });
