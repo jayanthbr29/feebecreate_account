@@ -591,6 +591,7 @@ app.post('/send-email/accountRemovedParent', async (req, res) => {
             text-align: center;
             padding: 20px;
             font-size: 14px;
+              margin-bottom: 20px;
             color: #666;
         }
 
@@ -825,6 +826,7 @@ app.post('/send-email/accountRemovedStaff', async (req, res) => {
              text-align: center;
              padding: 20px;
              font-size: 14px;
+             margin-bottom: 20px;
              color: #666;
          }
  
