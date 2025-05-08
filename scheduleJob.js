@@ -12,7 +12,7 @@ exports.sendScheduledNotifications = async () => {
 
         // Calculate the target date (next day)
         const targetDate = new Date(today);
-        targetDate.setDate(targetDate.getDate() + 1);
+        targetDate.setDate(targetDate.getDate());
         targetDate.setHours(0, 0, 0, 0); // Set to midnight
         console.log("targetDate 12 ", targetDate);
         const startOfDay = admin.firestore.Timestamp.fromDate(targetDate);
