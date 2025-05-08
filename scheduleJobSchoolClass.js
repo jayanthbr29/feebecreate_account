@@ -17,7 +17,8 @@ exports.sendScheduledNotificationsSchoolClass = async () => {
         const startOfDay = admin.firestore.Timestamp.fromDate(targetDate);
         // const endOfDay = admin.firestore.Timestamp.fromDate(new Date(targetDate.getTime() + 24 * 60 * 60 * 1000));
         const endOfDay = new Date(targetDate);
-        endOfDay.setDate(endOfDay.getDate() + 1);
+        endOfDay.setDate(endOfDay.getDate());
+        endOfDay.setHours(23, 59, 59, 999);
         // Convert seconds to a JavaScript Date object
 
         // Query all documents in the 'notices' collection
@@ -96,7 +97,8 @@ exports.sendScheduledNotificationsSchoolClass = async () => {
                 const payload = {
                     notification: {
                         title: notice.Event_Title || 'Notification',
-                        body: notice.Event_description || '',
+                        body: `${notice.Event_Title} has been scheduled for tomorrow.
+                         ${notice.Event_description || ''}`,
                         // clickAction: 'FLUTTER_NOTIFICATION_CLICK', // Adjust based on your app
                     },
                 };
@@ -185,12 +187,12 @@ const getFCMTokens = async (refs) => {
 
         // For each user document, fetch the 'fcm_tokens' sub-collection
         const tokenPromises = userDocs.map(async (userDoc) => {
-            if (userDoc.exists) {
+            if (userDoc?.exists) {
                 const fcmTokensSnapshot = await userDoc.ref.collection('fcm_tokens').get();
                 fcmTokensSnapshot.forEach(tokenDoc => {
                     const tokenData = tokenDoc.data();
                     // console.log("tokenData", tokenData);
-                    if (tokenData.fcm_token) { // Assuming the token field is named 'token'
+                    if (tokenData?.fcm_token) { // Assuming the token field is named 'token'
                         tokens.push(tokenData.fcm_token);
                     }
                 });

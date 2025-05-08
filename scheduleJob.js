@@ -12,15 +12,16 @@ exports.sendScheduledNotifications = async () => {
 
         // Calculate the target date (next day)
         const targetDate = new Date(today);
-        targetDate.setDate(targetDate.getDate()+1 );
+        targetDate.setDate(targetDate.getDate() + 1);
         targetDate.setHours(0, 0, 0, 0); // Set to midnight
         console.log("targetDate 12 ", targetDate);
         const startOfDay = admin.firestore.Timestamp.fromDate(targetDate);
         // const endOfDay = admin.firestore.Timestamp.fromDate(new Date(targetDate.getTime() + 24 * 60 * 60 * 1000));
         const endOfDay = new Date(targetDate);
-        endOfDay.setDate(endOfDay.getDate() +1);
+        endOfDay.setDate(endOfDay.getDate());
+        endOfDay.setHours(23, 59, 59, 999);
         // Convert seconds to a JavaScript Date object
-     
+
         // Query all documents in the 'notices' collection
         const noticesSnapshot = await db.collection('School').get();
 
@@ -43,8 +44,8 @@ exports.sendScheduledNotifications = async () => {
             data.student_data_list?.forEach((item) => {
                 parents = parents.concat(item.parent_list);
             })
-            let admins= data.listOfAdmin || [];
-          
+            let admins = data.listOfAdmin || [];
+
 
 
             // Filter notices occurring on the target date
@@ -52,9 +53,8 @@ exports.sendScheduledNotifications = async () => {
                 const noticeDate = notice.Event_date.toDate();
                 return noticeDate >= targetDate && noticeDate < endOfDay;
             });
-           
-            if (todaysNotices.length === 0) continue; // No notices for tomorrow in this document
 
+            if (todaysNotices.length === 0) continue; // No notices for tomorrow in this document
 
 
             // Fetch FCM tokens
@@ -65,7 +65,7 @@ exports.sendScheduledNotifications = async () => {
             // console.log("teacherTokens", teacherTokens);
             // console.log("parentTokens", parentTokens);
 
-            const combinedTokens = [...teacherTokens, ...parentTokens,...adminTokens];
+            const combinedTokens = [...teacherTokens, ...parentTokens, ...adminTokens];
 
             // if (combinedTokens.length === 0) continue; // No tokens to send to
 
@@ -74,7 +74,8 @@ exports.sendScheduledNotifications = async () => {
                 const payload = {
                     notification: {
                         title: notice.Event_Title || 'Notification',
-                        body: notice.Event_description || '',
+                        body: `${notice.Event_Title} has been scheduled for tomorrow.
+                         ${notice.Event_description || ''}`,
                         // clickAction: 'FLUTTER_NOTIFICATION_CLICK', // Adjust based on your app
                     },
                 };
@@ -118,7 +119,7 @@ const sendNotificationsInBatches = async (notifications) => {
         // Firebase allows sending up to 500 tokens in one batch
         const batches = chunkArray(tokens, 500);
 
-        if(batches.length === 0) continue;
+        if (batches.length === 0) continue;
         for (const batchTokens of batches) {
             const response = await admin.messaging().sendEachForMulticast({
                 tokens: batchTokens,
@@ -164,12 +165,12 @@ const getFCMTokens = async (refs) => {
 
         // For each user document, fetch the 'fcm_tokens' sub-collection
         const tokenPromises = userDocs.map(async (userDoc) => {
-            if (userDoc.exists) {
+            if (userDoc?.exists) {
                 const fcmTokensSnapshot = await userDoc.ref.collection('fcm_tokens').get();
                 fcmTokensSnapshot.forEach(tokenDoc => {
                     const tokenData = tokenDoc.data();
                     // console.log("tokenData", tokenData);
-                    if (tokenData.fcm_token) { // Assuming the token field is named 'token'
+                    if (tokenData?.fcm_token) { // Assuming the token field is named 'token'
                         tokens.push(tokenData.fcm_token);
                     }
                 });
