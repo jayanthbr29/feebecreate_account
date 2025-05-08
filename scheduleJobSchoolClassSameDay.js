@@ -11,16 +11,19 @@ exports.sendScheduledNotificationsSchoolClassSameDay = async () => {
 
         // Calculate the target date (next day)
         const targetDate = new Date(today);
-        targetDate.setHours(0, 0, 0, 0);
-        console.log("targetDate", targetDate);
-        console.log("targetDate in local time:", targetDate.toLocaleString());
-        // targetDate.setDate(targetDate.getDate()+1 ); // Set to midnight
+        // targetDate.setDate(targetDate.getDate()+1 );
+        targetDate.setHours(0, 0, 0, 0); // Set to midnight
         const startOfDay = admin.firestore.Timestamp.fromDate(targetDate);
         // const endOfDay = admin.firestore.Timestamp.fromDate(new Date(targetDate.getTime() + 24 * 60 * 60 * 1000));
         const endOfDay = new Date(targetDate);
-        endOfDay.setDate(endOfDay.getDate() +1);
+        endOfDay.setDate(endOfDay.getDate());
+        endOfDay.setHours(23, 59, 59, 999);
+        console.log("targetDate", targetDate, "endOfDay", endOfDay);
+        const startTimestamp = admin.firestore.Timestamp.fromDate(targetDate);
+        const endTimestamp = admin.firestore.Timestamp.fromDate(endOfDay);
+        console.log("startTimestamp", startTimestamp, "endTimestamp", endTimestamp);
         // Convert seconds to a JavaScript Date object
-     
+
         // Query all documents in the 'notices' collection
         const noticesSnapshot = await db.collection('School_class').get();
 
@@ -73,7 +76,7 @@ exports.sendScheduledNotificationsSchoolClassSameDay = async () => {
             // Filter notices occurring on the target date
             const todaysNotices = notices.filter(notice => {
                 const noticeDate = notice.Event_date.toDate();
-                return noticeDate >= targetDate && noticeDate <= endOfDay;
+                return noticeDate >= startTimestamp && noticeDate <= endTimestamp;
             });
 
             if (todaysNotices.length === 0) continue; // No notices for tomorrow in this document
@@ -86,7 +89,7 @@ exports.sendScheduledNotificationsSchoolClassSameDay = async () => {
             // console.log("teacherTokens", teacherTokens);
             // console.log("parentTokens", parentTokens);
 
-            const combinedTokens = [...teacherTokens, ...parentTokens,...adminTokens];
+            const combinedTokens = [...teacherTokens, ...parentTokens, ...adminTokens];
 
             if (combinedTokens.length === 0) continue; // No tokens to send to
 
@@ -95,7 +98,8 @@ exports.sendScheduledNotificationsSchoolClassSameDay = async () => {
                 const payload = {
                     notification: {
                         title: notice.Event_Title || 'Notification',
-                        body: notice.Event_description || '',
+                        body: `${notice.Event_Title} has been scheduled for today. 
+                         ${notice.Event_description || ''}`,
                         // clickAction: 'FLUTTER_NOTIFICATION_CLICK', // Adjust based on your app
                     },
                 };
@@ -139,7 +143,7 @@ const sendNotificationsInBatches = async (notifications) => {
         // Firebase allows sending up to 500 tokens in one batch
         const batches = chunkArray(tokens, 500);
 
-        if(batches.length === 0) continue;
+        if (batches.length === 0) continue;
         for (const batchTokens of batches) {
             const response = await admin.messaging().sendEachForMulticast({
                 tokens: batchTokens,
@@ -190,7 +194,7 @@ const getFCMTokens = async (refs) => {
                 fcmTokensSnapshot.forEach(tokenDoc => {
                     const tokenData = tokenDoc.data();
                     // console.log("tokenData", tokenData);
-                    if (tokenData.fcm_token) { // Assuming the token field is named 'token'
+                    if (tokenData?.fcm_token) { // Assuming the token field is named 'token'
                         tokens.push(tokenData.fcm_token);
                     }
                 });
