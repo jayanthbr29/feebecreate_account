@@ -7,6 +7,7 @@ const { sendScheduledNotificationsSchoolClassSameDay } = require("./scheduleJobS
 const { deleteOldNotifications } = require("./notificationRemoveJob");
 const axios = require("axios");
 const nodemailer = require('nodemailer');
+const querystring = require('querystring');
 
 const app = express();
 app.use(express.json());
@@ -921,4 +922,31 @@ app.post('/send-email/accountRemovedStaff', async (req, res) => {
     console.error('Error sending email:', error);
     res.status(500).send({ error: 'Error sending email', details: error.message });
   }
-}); 
+});
+
+app.post('/send-sms', async (req, res) => {
+  const { toPhoneNumber, message, templateId } = req.body;
+  if (!toPhoneNumber || !message) {
+    return res.status(400).send({ error: 'Missing required fields' });
+  }
+  try {
+    const response = await axios.get('http://sapteleservices.com/SMS_API/sendsms.php', {
+      params: {
+        username: 'feebe',
+        password: '123456',
+        mobile: toPhoneNumber,
+        sendername: 'FEEBON',
+        message: message,
+        // template_id: templateId // This is the new part
+      }
+    });
+
+    console.log('SMS sent:', response.data);
+    res.status(200).send({ message: 'SMS sent successfully', response: response.data });
+  } catch (error) {
+    console.error('Failed to send SMS:', error.message);
+    res.status(500).send({ error: 'Failed to send SMS', details: error.message });
+  }
+
+}
+);
