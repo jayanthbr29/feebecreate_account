@@ -925,8 +925,8 @@ app.post('/send-email/accountRemovedStaff', async (req, res) => {
 });
 
 app.post('/send-sms', async (req, res) => {
-  const { toPhoneNumber, message, templateId,userName,userPassword } = req.body;
-  if (!toPhoneNumber || !message) {
+  const { toPhoneNumber, templateId,userName,userPassword } = req.body;
+  if (!toPhoneNumber ) {
     return res.status(400).send({ error: 'Missing required fields' });
   }
   try {
