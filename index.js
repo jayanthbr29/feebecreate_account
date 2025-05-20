@@ -925,24 +925,48 @@ app.post('/send-email/accountRemovedStaff', async (req, res) => {
 });
 
 app.post('/send-sms', async (req, res) => {
-  const { toPhoneNumber, message, templateId } = req.body;
+  const { toPhoneNumber, message, templateId,userName,userPassword } = req.body;
   if (!toPhoneNumber || !message) {
     return res.status(400).send({ error: 'Missing required fields' });
   }
   try {
-    const response = await axios.get('http://sapteleservices.com/SMS_API/sendsms.php', {
-      params: {
-        username: 'feebe',
-        password: '123456',
-        mobile: toPhoneNumber,
-        sendername: 'FEEBON',
-        message: message,
-        // template_id: templateId // This is the new part
-      }
-    });
+    
+    const username = "feebe";
+    const password = "123456";
+    const sendername = "FEEBON";
+    const message = `Welcome!
+Your preschool has added you to Feebe, the official app for sharing updates about your child.
 
-    console.log('SMS sent:', response.data);
-    res.status(200).send({ message: 'SMS sent successfully', response: response.data });
+Your account has been created successfully.
+Download the Feebe app and use the login details below to access your account:
+
+Username: ${userName}
+Password: ${userPassword}
+
+Download the Feebe app:
+Android - https://play.google.com/store/apps/details?id=com.digi9.feebe
+iOS - https://apps.apple.com/in/app/feebe/id6741058480?source=ioscta`;
+
+    const encodedMessage = encodeURIComponent(message);
+
+    const url = `http://sapteleservices.com/SMS_API/sendsms.php?username=${username}&password=${password}&mobile=${toPhoneNumber}&sendername=${sendername}&message=${encodedMessage}&routetype=1&tid=1207174739381775334`;
+
+    let config = {
+      method: 'post',
+      maxBodyLength: Infinity,
+      url: url,
+      headers: {}
+    };
+
+    axios.request(config)
+      .then((response) => {
+        console.log(JSON.stringify(response.data));
+        res.status(200).send({ message: 'SMS sent successfully', response: response.data, MESSAGE: message });
+      })
+      .catch((error) => {
+        console.log(error);
+        res.status(500).send({ error: 'Failed to send SMS', details: error.message });
+      });
   } catch (error) {
     console.error('Failed to send SMS:', error.message);
     res.status(500).send({ error: 'Failed to send SMS', details: error.message });
