@@ -974,3 +974,325 @@ iOS - https://apps.apple.com/in/app/feebe/id6741058480?source=ioscta`;
 
 }
 );
+
+app.post('/send-sms/admin-onboarding', async (req, res) => {
+  const { toPhoneNumber, templateId,userName,userPassword } = req.body;
+  if (!toPhoneNumber ) {
+    return res.status(400).send({ error: 'Missing required fields' });
+  }
+  try {
+    
+    const username = "feebe";
+    const password = "123456";
+    const sendername = "FEEBON";
+    const message = `Welcome to Feebe!
+You've been added as an admin by your preschool to Feebe- the official preschool app.
+
+Your account has been created successfully.
+Download the Feebe app and use the login details below to access your account:
+
+Username: ${userName}
+Password: ${userPassword}
+
+Download the Feebe app:
+Android - https://play.google.com/store/apps/details?id=com.digi9.feebe
+iOS - https://apps.apple.com/in/app/feebe/id6741058480?source=ioscta`;
+
+    const encodedMessage = encodeURIComponent(message);
+
+    const url = `http://sapteleservices.com/SMS_API/sendsms.php?username=${username}&password=${password}&mobile=${toPhoneNumber}&sendername=${sendername}&message=${encodedMessage}&routetype=1&tid=1207174772134548266`;
+
+    let config = {
+      method: 'post',
+      maxBodyLength: Infinity,
+      url: url,
+      headers: {}
+    };
+
+    axios.request(config)
+      .then((response) => {
+        console.log(JSON.stringify(response.data));
+        res.status(200).send({ message: 'SMS sent successfully', response: response.data, MESSAGE: message });
+      })
+      .catch((error) => {
+        console.log(error);
+        res.status(500).send({ error: 'Failed to send SMS', details: error.message });
+      });
+  } catch (error) {
+    console.error('Failed to send SMS:', error.message);
+    res.status(500).send({ error: 'Failed to send SMS', details: error.message });
+  }
+
+}
+);
+
+app.post('/send-sms/Preschool-onboarding-message', async (req, res) => {
+  const { toPhoneNumber, templateId,userName,userPassword } = req.body;
+  if (!toPhoneNumber ) {
+    return res.status(400).send({ error: 'Missing required fields' });
+  }
+  try {
+    
+    const username = "feebe";
+    const password = "123456";
+    const sendername = "FEEBON";
+    const message = `Welcome to Feebe!
+Thank you for choosing Feebe for your preschool's management.
+
+Your account has been created successfully.
+Download the Feebe app and use the login details below to access your account:
+
+Username: ${userName}
+Password: ${userPassword}
+
+Download the Feebe app:
+Android - https://play.google.com/store/apps/details?id=com.digi9.feebe
+iOS - https://apps.apple.com/in/app/feebe/id6741058480?source=ioscta`;
+
+    const encodedMessage = encodeURIComponent(message);
+
+    const url = `http://sapteleservices.com/SMS_API/sendsms.php?username=${username}&password=${password}&mobile=${toPhoneNumber}&sendername=${sendername}&message=${encodedMessage}&routetype=1&tid=1207174774281596427`;
+
+    let config = {
+      method: 'post',
+      maxBodyLength: Infinity,
+      url: url,
+      headers: {}
+    };
+
+    axios.request(config)
+      .then((response) => {
+        console.log(JSON.stringify(response.data));
+        res.status(200).send({ message: 'SMS sent successfully', response: response.data, MESSAGE: message });
+      })
+      .catch((error) => {
+        console.log(error);
+        res.status(500).send({ error: 'Failed to send SMS', details: error.message });
+      });
+  } catch (error) {
+    console.error('Failed to send SMS:', error.message);
+    res.status(500).send({ error: 'Failed to send SMS', details: error.message });
+  }
+
+}
+);
+
+app.post('/send-sms/removing-parent', async (req, res) => {
+  const { toPhoneNumber, templateId,} = req.body;
+  if (!toPhoneNumber ) {
+    return res.status(400).send({ error: 'Missing required fields' });
+  }
+  try {
+    
+    const username = "feebe";
+    const password = "123456";
+    const sendername = "FEEBOF";
+    const message = `Dear parent,
+
+You have been removed from Feebe by your preschool. If this is unexpected, please contact the school directly. We wish you all the best and hope your time with Feebe was helpful.`;
+
+    const encodedMessage = encodeURIComponent(message);
+
+    const url = `http://sapteleservices.com/SMS_API/sendsms.php?username=${username}&password=${password}&mobile=${toPhoneNumber}&sendername=${sendername}&message=${encodedMessage}&routetype=1&tid=1207174772073154159`;
+
+    let config = {
+      method: 'post',
+      maxBodyLength: Infinity,
+      url: url,
+      headers: {}
+    };
+
+    axios.request(config)
+      .then((response) => {
+        console.log(JSON.stringify(response.data));
+        res.status(200).send({ message: 'SMS sent successfully', response: response.data, MESSAGE: message });
+      })
+      .catch((error) => {
+        console.log(error);
+        res.status(500).send({ error: 'Failed to send SMS', details: error.message });
+      });
+  } catch (error) {
+    console.error('Failed to send SMS:', error.message);
+    res.status(500).send({ error: 'Failed to send SMS', details: error.message });
+  }
+
+}
+);
+
+app.post('/send-sms/removing-preschool', async (req, res) => {
+  const { toPhoneNumber, templateId,} = req.body;
+  if (!toPhoneNumber ) {
+    return res.status(400).send({ error: 'Missing required fields' });
+  }
+  try {
+    
+    const username = "feebe";
+    const password = "123456";
+    const sendername = "FEEBOF";
+    const message = `Dear Ma'am/Sir,
+    
+Your preschool has been removed from Feebe. If this was unexpected, please feel free to contact us. We wish you all the best and hope your time with Feebe was valuable.`;
+
+    const encodedMessage = encodeURIComponent(message);
+
+    const url = `http://sapteleservices.com/SMS_API/sendsms.php?username=${username}&password=${password}&mobile=${toPhoneNumber}&sendername=${sendername}&message=${encodedMessage}&routetype=1&tid=1207174772842835458`;
+
+    let config = {
+      method: 'post',
+      maxBodyLength: Infinity,
+      url: url,
+      headers: {}
+    };
+
+    axios.request(config)
+      .then((response) => {
+        console.log(JSON.stringify(response.data));
+        res.status(200).send({ message: 'SMS sent successfully', response: response.data, MESSAGE: message });
+      })
+      .catch((error) => {
+        console.log(error);
+        res.status(500).send({ error: 'Failed to send SMS', details: error.message });
+      });
+  } catch (error) {
+    console.error('Failed to send SMS:', error.message);
+    res.status(500).send({ error: 'Failed to send SMS', details: error.message });
+  }
+
+}
+);
+
+app.post('/send-sms/removing-teacher', async (req, res) => {
+  const { toPhoneNumber, templateId,} = req.body;
+  if (!toPhoneNumber ) {
+    return res.status(400).send({ error: 'Missing required fields' });
+  }
+  try {
+    
+    const username = "feebe";
+    const password = "123456";
+    const sendername = "FEEBOF";
+    const message = `Dear teacher,
+    
+You have been removed from Feebe by your preschool. If this is unexpected, please contact the school directly. We wish you all the best and hope your time with Feebe was helpful.`;
+
+    const encodedMessage = encodeURIComponent(message);
+
+    const url = `http://sapteleservices.com/SMS_API/sendsms.php?username=${username}&password=${password}&mobile=${toPhoneNumber}&sendername=${sendername}&message=${encodedMessage}&routetype=1&tid=1207174772345352143`;
+
+    let config = {
+      method: 'post',
+      maxBodyLength: Infinity,
+      url: url,
+      headers: {}
+    };
+
+    axios.request(config)
+      .then((response) => {
+        console.log(JSON.stringify(response.data));
+        res.status(200).send({ message: 'SMS sent successfully', response: response.data, MESSAGE: message });
+      })
+      .catch((error) => {
+        console.log(error);
+        res.status(500).send({ error: 'Failed to send SMS', details: error.message });
+      });
+  } catch (error) {
+    console.error('Failed to send SMS:', error.message);
+    res.status(500).send({ error: 'Failed to send SMS', details: error.message });
+  }
+
+}
+);
+
+app.post('/send-sms/removing-admin', async (req, res) => {
+  const { toPhoneNumber, templateId,} = req.body;
+  if (!toPhoneNumber ) {
+    return res.status(400).send({ error: 'Missing required fields' });
+  }
+  try {
+    
+    const username = "feebe";
+    const password = "123456";
+    const sendername = "FEEBOF";
+    const message = `Dear Admin,
+    
+You have been removed from Feebe by your preschool. If this is unexpected, please contact the school directly. We wish you all the best and hope your time with Feebe was helpful.`;
+
+    const encodedMessage = encodeURIComponent(message);
+
+    const url = `http://sapteleservices.com/SMS_API/sendsms.php?username=${username}&password=${password}&mobile=${toPhoneNumber}&sendername=${sendername}&message=${encodedMessage}&routetype=1&tid=1207174772208553519`;
+
+    let config = {
+      method: 'post',
+      maxBodyLength: Infinity,
+      url: url,
+      headers: {}
+    };
+
+    axios.request(config)
+      .then((response) => {
+        console.log(JSON.stringify(response.data));
+        res.status(200).send({ message: 'SMS sent successfully', response: response.data, MESSAGE: message });
+      })
+      .catch((error) => {
+        console.log(error);
+        res.status(500).send({ error: 'Failed to send SMS', details: error.message });
+      });
+  } catch (error) {
+    console.error('Failed to send SMS:', error.message);
+    res.status(500).send({ error: 'Failed to send SMS', details: error.message });
+  }
+
+}
+);
+
+app.post('/send-sms/teacher-onboarding', async (req, res) => {
+  const { toPhoneNumber, templateId,userName,userPassword } = req.body;
+  if (!toPhoneNumber ) {
+    return res.status(400).send({ error: 'Missing required fields' });
+  }
+  try {
+    
+    const username = "feebe";
+    const password = "123456";
+    const sendername = "FEEBON";
+    const message = `Welcome to Feebe!
+    
+You've been added as a teacher by your preschool to Feebe- the official preschool app.
+
+Your account has been created successfully.
+Download the Feebe app and use the login details below to access your account:
+
+Username: ${userName}
+Password: ${userPassword}
+
+Download the Feebe app:
+Android - https://play.google.com/store/apps/details?id=com.digi9.feebe
+iOS - https://apps.apple.com/in/app/feebe/id6741058480?source=ioscta`;
+
+    const encodedMessage = encodeURIComponent(message);
+
+    const url = `http://sapteleservices.com/SMS_API/sendsms.php?username=${username}&password=${password}&mobile=${toPhoneNumber}&sendername=${sendername}&message=${encodedMessage}&routetype=1&tid=1207174772238552809`;
+
+    let config = {
+      method: 'post',
+      maxBodyLength: Infinity,
+      url: url,
+      headers: {}
+    };
+
+    axios.request(config)
+      .then((response) => {
+        console.log(JSON.stringify(response.data));
+        res.status(200).send({ message: 'SMS sent successfully', response: response.data, MESSAGE: message });
+      })
+      .catch((error) => {
+        console.log(error);
+        res.status(500).send({ error: 'Failed to send SMS', details: error.message });
+      });
+  } catch (error) {
+    console.error('Failed to send SMS:', error.message);
+    res.status(500).send({ error: 'Failed to send SMS', details: error.message });
+  }
+
+}
+);
