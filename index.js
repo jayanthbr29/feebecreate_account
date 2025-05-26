@@ -8,7 +8,10 @@ const { deleteOldNotifications } = require("./notificationRemoveJob");
 const axios = require("axios");
 const nodemailer = require('nodemailer');
 const querystring = require('querystring');
-
+const jwt = require("jsonwebtoken");
+const { v4: uuidv4 } = require("uuid");
+const { generateToken, validateToken, markTokenUsed } = require("./forgotPasswordPageLinkService");
+require("dotenv").config();
 const app = express();
 app.use(express.json());
 
@@ -925,12 +928,12 @@ app.post('/send-email/accountRemovedStaff', async (req, res) => {
 });
 
 app.post('/send-sms', async (req, res) => {
-  const { toPhoneNumber, templateId,userName,userPassword } = req.body;
-  if (!toPhoneNumber ) {
+  const { toPhoneNumber, templateId, userName, userPassword } = req.body;
+  if (!toPhoneNumber) {
     return res.status(400).send({ error: 'Missing required fields' });
   }
   try {
-    
+
     const username = "feebe";
     const password = "123456";
     const sendername = "FEEBON";
@@ -976,12 +979,12 @@ iOS - https://apps.apple.com/in/app/feebe/id6741058480?source=ioscta`;
 );
 
 app.post('/send-sms/admin-onboarding', async (req, res) => {
-  const { toPhoneNumber, templateId,userName,userPassword } = req.body;
-  if (!toPhoneNumber ) {
+  const { toPhoneNumber, templateId, userName, userPassword } = req.body;
+  if (!toPhoneNumber) {
     return res.status(400).send({ error: 'Missing required fields' });
   }
   try {
-    
+
     const username = "feebe";
     const password = "123456";
     const sendername = "FEEBON";
@@ -1027,12 +1030,12 @@ iOS - https://apps.apple.com/in/app/feebe/id6741058480?source=ioscta`;
 );
 
 app.post('/send-sms/Preschool-onboarding-message', async (req, res) => {
-  const { toPhoneNumber, templateId,userName,userPassword } = req.body;
-  if (!toPhoneNumber ) {
+  const { toPhoneNumber, templateId, userName, userPassword } = req.body;
+  if (!toPhoneNumber) {
     return res.status(400).send({ error: 'Missing required fields' });
   }
   try {
-    
+
     const username = "feebe";
     const password = "123456";
     const sendername = "FEEBON";
@@ -1078,12 +1081,12 @@ iOS - https://apps.apple.com/in/app/feebe/id6741058480?source=ioscta`;
 );
 
 app.post('/send-sms/removing-parent', async (req, res) => {
-  const { toPhoneNumber, templateId,} = req.body;
-  if (!toPhoneNumber ) {
+  const { toPhoneNumber, templateId, } = req.body;
+  if (!toPhoneNumber) {
     return res.status(400).send({ error: 'Missing required fields' });
   }
   try {
-    
+
     const username = "feebe";
     const password = "123456";
     const sendername = "FEEBOF";
@@ -1120,12 +1123,12 @@ You have been removed from Feebe by your preschool. If this is unexpected, pleas
 );
 
 app.post('/send-sms/removing-preschool', async (req, res) => {
-  const { toPhoneNumber, templateId,} = req.body;
-  if (!toPhoneNumber ) {
+  const { toPhoneNumber, templateId, } = req.body;
+  if (!toPhoneNumber) {
     return res.status(400).send({ error: 'Missing required fields' });
   }
   try {
-    
+
     const username = "feebe";
     const password = "123456";
     const sendername = "FEEBOF";
@@ -1162,12 +1165,12 @@ Your preschool has been removed from Feebe. If this was unexpected, please feel 
 );
 
 app.post('/send-sms/removing-teacher', async (req, res) => {
-  const { toPhoneNumber, templateId,} = req.body;
-  if (!toPhoneNumber ) {
+  const { toPhoneNumber, templateId, } = req.body;
+  if (!toPhoneNumber) {
     return res.status(400).send({ error: 'Missing required fields' });
   }
   try {
-    
+
     const username = "feebe";
     const password = "123456";
     const sendername = "FEEBOF";
@@ -1204,12 +1207,12 @@ You have been removed from Feebe by your preschool. If this is unexpected, pleas
 );
 
 app.post('/send-sms/removing-admin', async (req, res) => {
-  const { toPhoneNumber, templateId,} = req.body;
-  if (!toPhoneNumber ) {
+  const { toPhoneNumber, templateId, } = req.body;
+  if (!toPhoneNumber) {
     return res.status(400).send({ error: 'Missing required fields' });
   }
   try {
-    
+
     const username = "feebe";
     const password = "123456";
     const sendername = "FEEBOF";
@@ -1246,12 +1249,12 @@ You have been removed from Feebe by your preschool. If this is unexpected, pleas
 );
 
 app.post('/send-sms/teacher-onboarding', async (req, res) => {
-  const { toPhoneNumber, templateId,userName,userPassword } = req.body;
-  if (!toPhoneNumber ) {
+  const { toPhoneNumber, templateId, userName, userPassword } = req.body;
+  if (!toPhoneNumber) {
     return res.status(400).send({ error: 'Missing required fields' });
   }
   try {
-    
+
     const username = "feebe";
     const password = "123456";
     const sendername = "FEEBON";
@@ -1296,3 +1299,47 @@ iOS - https://apps.apple.com/in/app/feebe/id6741058480?source=ioscta`;
 
 }
 );
+
+app.post('/send-sms/forgot-password', async (req, res) => {
+  const { userId } = req.body;
+  if (!userId) return res.status(400).json({ error: "Missing userId" });
+  try {
+
+    const token = await generateToken(userId);
+    const link = `https://your-vercel-url.vercel.app/reset-password?token=${token}`;
+    return res.json({ link });
+  } catch (error) {
+    console.error('Failed to send SMS:', error.message);
+    res.status(500).send({ error: 'Failed to send SMS', details: error.message });
+  }
+});
+
+app.get('/validateSignature', async (req, res) => {
+  const { token } = req.query;
+  if (!token) return res.status(400).json({ error: "Token is required" });
+
+  try {
+    const userId = await validateToken(token);
+    return res.json({ success: true, userId });
+  } catch (err) {
+    return res.status(401).json({ success: false, error: err.message });
+  }
+});
+app.post('/reset-password', async (req, res) => {
+  const { token, newPassword } = req.body;
+
+  if (!token || !newPassword) {
+    return res.status(400).json({ success: false, message: "Missing token or newPassword" });
+  }
+
+  try {
+    const userId = await validateToken(token);
+    const uid = userId;
+    await admin.auth().updateUser(uid, { password: newPassword });
+    await markTokenUsed(token);
+    res.status(200).json({ success: true, message: "Password updated successfully" });
+  } catch (error) {
+    console.error("Password reset error:", error);
+    res.status(500).json({ success: false, message: "Failed to reset password", error: error.message });
+  }
+});
