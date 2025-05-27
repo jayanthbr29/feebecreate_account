@@ -1308,7 +1308,7 @@ app.post('/send-sms/forgot-password', async (req, res) => {
   try {
 
     const token = await generateToken(userId);
-    const link = `https://your-vercel-url.vercel.app/reset-password?token=${token}`;
+    const link = `https://feebe-web-forgot-password.vercel.app/secure-link?token=${token}`;
     return res.json({ link });
   } catch (error) {
     console.error('Failed to send SMS:', error.message);
