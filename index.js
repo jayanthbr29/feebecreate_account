@@ -14,6 +14,8 @@ const { generateToken, validateToken, markTokenUsed } = require("./forgotPasswor
 require("dotenv").config();
 const app = express();
 app.use(express.json());
+const cors = require("cors");
+app.use(cors());
 
 const db = admin.firestore();
 const FieldValue = admin.firestore.FieldValue;
