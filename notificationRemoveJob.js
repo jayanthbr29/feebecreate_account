@@ -29,8 +29,23 @@ exports.deleteOldNotifications = async () => {
 
         await batch.commit();
         console.log(`Deleted ${snapshot.size} old notifications.`);
+        await cleanOldTokens();
         return snapshot;
     } catch (error) {
         console.error("Error deleting old notifications:", error);
     }
+};
+const cleanOldTokens = async () => {
+  const cutoff = new Date();
+  cutoff.setMonth(cutoff.getMonth() - 1);
+
+  const snapshot = await db.collection("oneTimeTokens")
+    .where("createdAt", "<", cutoff)
+    .get();
+
+  const batch = db.batch();
+  snapshot.forEach((doc) => batch.delete(doc.ref));
+  await batch.commit();
+
+  console.log(`Cleaned ${snapshot.size} old tokens`);
 };
