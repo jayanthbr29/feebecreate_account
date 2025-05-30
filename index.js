@@ -1303,13 +1303,40 @@ iOS - https://apps.apple.com/in/app/feebe/id6741058480?source=ioscta`;
 );
 
 app.post('/send-sms/forgot-password', async (req, res) => {
-  const { userId } = req.body;
+  const { userId,toPhoneNumber } = req.body;
   if (!userId) return res.status(400).json({ error: "Missing userId" });
   try {
 
     const token = await generateToken(userId);
     const link = `https://feebe.in/secure-link?token=${token}`;
-    return res.json({ link });
+    // return res.json({ link });
+    const username = "feebe";
+    const password = "123456";
+    const sendername = "FEEADM";
+    const message = `To reset your password for Feebe, click the link below. If you didn't request this, please ignore this message.
+    ${link}
+    Thank you`; 
+
+    const encodedMessage = encodeURIComponent(message);
+
+    const url = `http://sapteleservices.com/SMS_API/sendsms.php?username=${username}&password=${password}&mobile=${toPhoneNumber}&sendername=${sendername}&message=${encodedMessage}&routetype=1&tid=1207174853062161362`;
+
+    let config = {
+      method: 'post',
+      maxBodyLength: Infinity,
+      url: url,
+      headers: {}
+    };
+
+    axios.request(config)
+      .then((response) => {
+        console.log(JSON.stringify(response.data));
+        res.status(200).send({ message: 'SMS sent successfully', response: response.data, MESSAGE: message });
+      })
+      .catch((error) => {
+        console.log(error);
+        res.status(500).send({ error: 'Failed to send SMS', details: error.message });
+      });
   } catch (error) {
     console.error('Failed to send SMS:', error.message);
     res.status(500).send({ error: 'Failed to send SMS', details: error.message });
