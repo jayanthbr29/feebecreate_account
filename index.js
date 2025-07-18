@@ -252,7 +252,7 @@ app.post('/send-email', async (req, res) => {
         /* Add fallback for email clients that don't support external styles */
         body {
             font-family: 'Nunito', sans-serif;
-            background-color: #f5f5f5;
+            background-color: #ffffff;
             margin: 0;
             padding: 0;
         }
@@ -427,18 +427,22 @@ app.post('/send-email', async (req, res) => {
         <tr>
             <td class="footer">
                 <p class="subcontent">We’re excited to see how Feebe transforms your preschool management journey!</p>
-                <div class="app-links">
-                    <a href="https://play.google.com/store/apps/details?id=com.digi9.feebe">
-                        <img src="https://firebasestorage.googleapis.com/v0/b/feebee-8578d.firebasestorage.app/o/Frame%20289965%20(1).png?alt=media&token=72e2e7ee-f4c1-4764-9a5c-e537603a3a13" alt="App Store Link">
-                    </a>
-                </div>
+               <div class="app-links" style="display: flex; justify-content: center; gap: 10px; margin-top: 15px;">
+    <a href="https://play.google.com/store/apps/details?id=com.digi9.feebe" target="_blank">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Get it on Google Play" style="max-width: 140px;">
+    </a>
+    <a href="https://apps.apple.com/in/app/feebe/id6741058480" target="_blank">
+        <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store" style="max-width: 140px;">
+    </a>
+</div>
+
+
             </td>
         </tr>
     </table>
 </body>
 
 </html>
- 
       `;
 
     // Mail options
