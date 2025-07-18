@@ -429,7 +429,7 @@ app.post('/send-email', async (req, res) => {
                 <p class="subcontent">We’re excited to see how Feebe transforms your preschool management journey!</p>
                 <div class="app-links">
                     <a href="https://play.google.com/store/apps/details?id=com.digi9.feebe">
-                        <img src="https://firebasestorage.googleapis.com/v0/b/Feebe-8578d.firebasestorage.app/o/Frame%20289965%20(1).png?alt=media&token=72e2e7ee-f4c1-4764-9a5c-e537603a3a13" alt="App Store Link">
+                        <img src="https://firebasestorage.googleapis.com/v0/b/feebee-8578d.firebasestorage.app/o/Frame%20289965%20(1).png?alt=media&token=72e2e7ee-f4c1-4764-9a5c-e537603a3a13" alt="App Store Link">
                     </a>
                 </div>
             </td>
@@ -445,7 +445,7 @@ app.post('/send-email', async (req, res) => {
     const mailOptions = {
       from: "Info@gully2global.com",
       to: toEmail,
-      subject: "Welcome to Feebe, Your Account Has Been Created Successfully!",
+      subject: "Welcome to Feebee, Your Account Has Been Created Successfully!",
       html: emailTemplate,
     };
 
@@ -681,7 +681,7 @@ app.post('/send-email/accountRemovedParent', async (req, res) => {
     const mailOptions = {
       from: "Info@gully2global.com",
       to: toEmail,
-      subject: "Feebe, Your Account Has Been Removed!",
+      subject: "Feebee, Your Account Has Been Removed!",
       html: emailTemplateParent,
     };
 
@@ -915,7 +915,7 @@ app.post('/send-email/accountRemovedStaff', async (req, res) => {
     const mailOptions = {
       from: "Info@gully2global.com",
       to: toEmail,
-      subject: "Feebe, Your Account Has Been Removed!",
+      subject: "Feebee, Your Account Has Been Removed!",
       html: emailTemplateStaff,
     };
 
