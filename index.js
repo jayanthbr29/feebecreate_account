@@ -10,6 +10,9 @@ const nodemailer = require('nodemailer');
 const querystring = require('querystring');
 const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
+const sharp = require('sharp');
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage() });
 const { generateToken, validateToken, markTokenUsed } = require("./forgotPasswordPageLinkService");
 require("dotenv").config();
 const app = express();
@@ -1374,5 +1377,97 @@ app.post('/reset-password', async (req, res) => {
   } catch (error) {
     console.error("Password reset error:", error);
     res.status(500).json({ success: false, message: "Failed to reset password", error: error.message });
+  }
+});
+
+app.post('/compress-image', upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).send({ message: 'No image file uploaded' });
+    }
+
+    const inputBuffer = req.file.buffer;
+    const MAX_SIZE = 20 * 1024; // 20 KB
+
+    // Detect input format
+    let metadata;
+    try {
+      metadata = await sharp(inputBuffer).metadata();
+    } catch (err) {
+      console.warn('Unable to read image metadata:', err.message);
+    }
+
+    let format = 'jpeg'; // default
+    if (metadata && ['jpeg', 'jpg', 'png', 'webp'].includes(metadata.format)) {
+      format = metadata.format;
+    } else {
+      console.warn(`Unsupported input format (${metadata?.format}), converting to JPEG`);
+      format = 'jpeg';
+    }
+
+    let quality = 80;
+    let compressedBuffer;
+    let success = false;
+
+    // Loop to compress until under 20 KB
+    for (; quality >= 10; quality -= 10) {
+      let pipeline = sharp(inputBuffer);
+
+      if (format === 'jpeg' || format === 'jpg') {
+        pipeline = pipeline.jpeg({ quality });
+      } else if (format === 'png') {
+        pipeline = pipeline.png({
+          compressionLevel: 9,
+          quality,
+          palette: true,
+          adaptiveFiltering: true,
+        });
+      } else if (format === 'webp') {
+        pipeline = pipeline.webp({ quality });
+      } else {
+        // HEIC or others: convert to JPEG
+        pipeline = pipeline.jpeg({ quality });
+      }
+
+      compressedBuffer = await pipeline.toBuffer();
+      if (compressedBuffer.length <= MAX_SIZE) {
+        success = true;
+        break;
+      }
+    }
+
+    if (!success) {
+      return res.status(400).send({ message: 'Could not compress image under 20KB even at lowest quality' });
+    }
+
+    // Upload to Firebase Storage
+    const bucket = admin.storage().bucket();
+    const timestamp = Date.now();
+    const fileExt = 'jpg'; // always saving as jpeg
+    const fileName = `compressed/${timestamp}_${req.file.originalname.replace(/\.[^/.]+$/, "")}.${fileExt}`;
+    const file = bucket.file(fileName);
+
+    await file.save(compressedBuffer, {
+      contentType: 'image/jpeg',
+      public: true,
+      metadata: {
+        cacheControl: 'public, max-age=31536000',
+      },
+    });
+
+    await file.makePublic(); // ensure public access
+
+    const imageUrl = `https://storage.googleapis.com/${bucket.name}/${file.name}`;
+
+    res.status(200).send({
+      message: 'Image compressed successfully',
+      imageUrl,
+      finalSizeKB: (compressedBuffer.length / 1024).toFixed(2),
+      qualityUsed: quality
+    });
+
+  } catch (error) {
+    console.error('Image compression error:', error);
+    res.status(500).send({ message: 'Error compressing image', error: error.message });
   }
 });

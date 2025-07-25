@@ -9,6 +9,7 @@ const serviceAccount = JSON.parse(
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL: "https://feebee-8578d.firebaseio.com", // Replace with your Firebase database URL
+  storageBucket: 'feebee-8578d',
+  databaseURL: "https://feebee-8578d-default-rtdb.asia-southeast1.firebasedatabase.app", // Replace with your Firebase database URL
 });
 module.exports = admin;
