@@ -10,8 +10,10 @@ const nodemailer = require('nodemailer');
 const querystring = require('querystring');
 const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
-const sharp = require('sharp');
 const multer = require('multer');
+const sharp = require('sharp');
+const heicConvert = require('heic-convert');
+const path = require('path');
 const upload = multer({ storage: multer.memoryStorage() });
 const { generateToken, validateToken, markTokenUsed } = require("./forgotPasswordPageLinkService");
 require("dotenv").config();
@@ -1382,92 +1384,89 @@ app.post('/reset-password', async (req, res) => {
 
 app.post('/compress-image', upload.single('image'), async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).send({ message: 'No image file uploaded' });
+    if (!req.file || !req.file.buffer) {
+      return res.status(400).json({ message: 'No image uploaded' });
     }
 
-    const inputBuffer = req.file.buffer;
     const MAX_SIZE = 20 * 1024; // 20 KB
+    const originalName = req.file.originalname;
+    const ext = path.extname(originalName).toLowerCase();
+    let buffer = req.file.buffer;
+    let convertedFromHEIC = false;
 
-    // Detect input format
-    let metadata;
-    try {
-      metadata = await sharp(inputBuffer).metadata();
-    } catch (err) {
-      console.warn('Unable to read image metadata:', err.message);
+    // 🔍 Detect and convert HEIC
+    if (ext === '.heic' || ext === '.heif' || isHEICFile(buffer)) {
+      try {
+        buffer = await heicConvert({
+          buffer,
+          format: 'JPEG',
+          quality: 1
+        });
+        convertedFromHEIC = true;
+        console.log('✅ HEIC converted to JPEG');
+      } catch (err) {
+        console.error('❌ HEIC conversion failed:', err);
+        return res.status(400).json({ message: 'Invalid HEIC image', error: err.message });
+      }
     }
 
-    let format = 'jpeg'; // default
-    if (metadata && ['jpeg', 'jpg', 'png', 'webp'].includes(metadata.format)) {
-      format = metadata.format;
-    } else {
-      console.warn(`Unsupported input format (${metadata?.format}), converting to JPEG`);
-      format = 'jpeg';
-    }
-
+    // 🔁 Try compressing and resizing
     let quality = 80;
     let compressedBuffer;
     let success = false;
 
-    // Loop to compress until under 20 KB
     for (; quality >= 10; quality -= 10) {
-      let pipeline = sharp(inputBuffer);
+      try {
+        compressedBuffer = await sharp(buffer)
+          .resize({ width: 1024 }) // Resize for better compression
+          .jpeg({ quality })       // Always convert to JPEG
+          .toBuffer();
 
-      if (format === 'jpeg' || format === 'jpg') {
-        pipeline = pipeline.jpeg({ quality });
-      } else if (format === 'png') {
-        pipeline = pipeline.png({
-          compressionLevel: 9,
-          quality,
-          palette: true,
-          adaptiveFiltering: true,
-        });
-      } else if (format === 'webp') {
-        pipeline = pipeline.webp({ quality });
-      } else {
-        // HEIC or others: convert to JPEG
-        pipeline = pipeline.jpeg({ quality });
-      }
-
-      compressedBuffer = await pipeline.toBuffer();
-      if (compressedBuffer.length <= MAX_SIZE) {
-        success = true;
-        break;
+        if (compressedBuffer.length <= MAX_SIZE) {
+          success = true;
+          break;
+        }
+      } catch (err) {
+        return res.status(500).json({ message: 'Sharp compression failed', error: err.message });
       }
     }
 
     if (!success) {
-      return res.status(400).send({ message: 'Could not compress image under 20KB even at lowest quality' });
+      return res.status(400).json({ message: 'Could not compress image under 20 KB' });
     }
 
-    // Upload to Firebase Storage
+    // ☁️ Upload to Firebase Storage
     const bucket = admin.storage().bucket();
     const timestamp = Date.now();
-    const fileExt = 'jpg'; // always saving as jpeg
-    const fileName = `compressed/${timestamp}_${req.file.originalname.replace(/\.[^/.]+$/, "")}.${fileExt}`;
+    const fileName = `compressed/${timestamp}_${originalName.replace(/\.[^/.]+$/, '')}.jpg`;
     const file = bucket.file(fileName);
 
     await file.save(compressedBuffer, {
       contentType: 'image/jpeg',
-      public: true,
-      metadata: {
-        cacheControl: 'public, max-age=31536000',
-      },
+      metadata: { cacheControl: 'public, max-age=31536000' }
     });
 
-    await file.makePublic(); // ensure public access
+    // 🔐 Generate signed URL (for UBLA buckets)
+    const [signedUrl] = await file.getSignedUrl({
+      action: 'read',
+      expires: Date.now() + 60 * 60 * 1000 // 1 hour
+    });
 
-    const imageUrl = `https://storage.googleapis.com/${bucket.name}/${file.name}`;
-
-    res.status(200).send({
+    return res.status(200).json({
       message: 'Image compressed successfully',
-      imageUrl,
-      finalSizeKB: (compressedBuffer.length / 1024).toFixed(2),
+      imageUrl: signedUrl,
+      originalFormat: convertedFromHEIC ? 'heic' : ext.replace('.', ''),
+      sizeKB: (compressedBuffer.length / 1024).toFixed(2),
       qualityUsed: quality
     });
 
   } catch (error) {
     console.error('Image compression error:', error);
-    res.status(500).send({ message: 'Error compressing image', error: error.message });
+    return res.status(500).json({ message: 'Error compressing image', error: error.message });
   }
 });
+
+// 🧠 HEIC detection by magic bytes (ftyp)
+function isHEICFile(buffer) {
+  return buffer.slice(8, 12).toString() === 'ftyp';
+}
