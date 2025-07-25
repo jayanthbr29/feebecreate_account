@@ -1470,3 +1470,90 @@ app.post('/compress-image', upload.single('image'), async (req, res) => {
 function isHEICFile(buffer) {
   return buffer.slice(8, 12).toString() === 'ftyp';
 }
+
+app.post('/compress-from-url', async (req, res) => {
+  const { imageUrl } = req.body;
+
+  if (!imageUrl) {
+    return res.status(400).json({ message: 'imageUrl is required in request body' });
+  }
+
+  try {
+    const response = await axios.get(imageUrl, { responseType: 'arraybuffer' });
+    let buffer = Buffer.from(response.data);
+    const contentType = response.headers['content-type'];
+    let ext = path.extname(imageUrl).toLowerCase();
+    let convertedFromHEIC = false;
+
+    // Handle missing extension (detect from content-type)
+    if (!ext || ext === '') {
+      ext = contentType.includes('heic') ? '.heic' : contentType.includes('png') ? '.png' : '.jpg';
+    }
+
+    // HEIC to JPEG conversion
+    if (ext === '.heic' || ext === '.heif' || isHEICFile(buffer)) {
+      try {
+        buffer = await heicConvert({
+          buffer,
+          format: 'JPEG',
+          quality: 1
+        });
+        convertedFromHEIC = true;
+        console.log('✅ Converted HEIC to JPEG');
+      } catch (err) {
+        return res.status(400).json({ message: 'Failed to convert HEIC to JPEG', error: err.message });
+      }
+    }
+
+    // Compress logic
+    const MAX_SIZE = 20 * 1024;
+    let compressedBuffer;
+    let quality = 80;
+    let success = false;
+
+    for (; quality >= 10; quality -= 10) {
+      compressedBuffer = await sharp(buffer)
+        .resize({ width: 1024 })
+        .jpeg({ quality })
+        .toBuffer();
+
+      if (compressedBuffer.length <= MAX_SIZE) {
+        success = true;
+        break;
+      }
+    }
+
+    if (!success) {
+      return res.status(400).json({ message: 'Could not compress image under 20 KB' });
+    }
+
+    // Firebase upload
+    const bucket = admin.storage().bucket();
+    const timestamp = Date.now();
+    const fileName = `compressed/${timestamp}_${path.basename(imageUrl).replace(/\.[^/.]+$/, '')}.jpg`;
+    const file = bucket.file(fileName);
+
+    await file.save(compressedBuffer, {
+      contentType: 'image/jpeg',
+      metadata: { cacheControl: 'public, max-age=31536000' }
+    });
+
+    // Signed URL
+    const [signedUrl] = await file.getSignedUrl({
+      action: 'read',
+      expires: Date.now() + 60 * 60 * 1000 // 1 hour
+    });
+
+    return res.status(200).json({
+      message: 'Image URL compressed successfully',
+      imageUrl: signedUrl,
+      originalFormat: convertedFromHEIC ? 'heic' : ext.replace('.', ''),
+      sizeKB: (compressedBuffer.length / 1024).toFixed(2),
+      qualityUsed: quality
+    });
+
+  } catch (err) {
+    console.error('URL compression error:', err);
+    return res.status(500).json({ message: 'Failed to process image URL', error: err.message });
+  }
+});
