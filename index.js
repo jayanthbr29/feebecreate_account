@@ -1514,6 +1514,7 @@ app.post('/compress-from-url', async (req, res) => {
     for (; quality >= 10; quality -= 10) {
       compressedBuffer = await sharp(buffer)
         .resize({ width: 1024 })
+        .rotate(Number(90))
         .jpeg({ quality })
         .toBuffer();
 
