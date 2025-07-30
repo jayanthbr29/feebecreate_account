@@ -239,8 +239,8 @@ app.post('/send-email', async (req, res) => {
       port: 465,
       secure: true,
       auth: {
-        user: "Info@gully2global.com",
-        pass: "Shasudigi@217",
+        user: "info@feebe.in",
+        pass: "Qwertyuiop1!@#7",
       },
     });
 
@@ -452,7 +452,7 @@ app.post('/send-email', async (req, res) => {
 
     // Mail options
     const mailOptions = {
-      from: "Info@gully2global.com",
+      from: "info@feebe.in",
       to: toEmail,
       subject: "Welcome to Feebee, Your Account Has Been Created Successfully!",
       html: emailTemplate,
@@ -482,8 +482,8 @@ app.post('/send-email/accountRemovedParent', async (req, res) => {
       port: 465,
       secure: true,
       auth: {
-        user: "Info@gully2global.com",
-        pass: "Shasudigi@217",
+        user: "info@feebe.in",
+        pass: "Qwertyuiop1!@#",
       },
     });
 
@@ -688,7 +688,7 @@ app.post('/send-email/accountRemovedParent', async (req, res) => {
 
     // Mail options
     const mailOptions = {
-      from: "Info@gully2global.com",
+      from: "info@feebe.in",
       to: toEmail,
       subject: "Feebee, Your Account Has Been Removed!",
       html: emailTemplateParent,
@@ -719,8 +719,8 @@ app.post('/send-email/accountRemovedStaff', async (req, res) => {
       port: 465,
       secure: true,
       auth: {
-        user: "Info@gully2global.com",
-        pass: "Shasudigi@217",
+        user: "info@feebe.in",
+        pass: "Qwertyuiop1!@#7",
       },
     });
 
@@ -922,7 +922,7 @@ app.post('/send-email/accountRemovedStaff', async (req, res) => {
  </html>
           `;
     const mailOptions = {
-      from: "Info@gully2global.com",
+      from: "info@feebe.in",
       to: toEmail,
       subject: "Feebee, Your Account Has Been Removed!",
       html: emailTemplateStaff,
