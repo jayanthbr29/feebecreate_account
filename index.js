@@ -235,8 +235,8 @@ app.post('/send-email', async (req, res) => {
   try {
     // Configure transporter
     const transporter = nodemailer.createTransport({
-      host: 'smtp.hostinger.com',
-      port: 465,
+      host: 'mail.feebe.in',
+      port: 587,
       secure: true,
       auth: {
         user: "info@feebe.in",
@@ -478,8 +478,8 @@ app.post('/send-email/accountRemovedParent', async (req, res) => {
   try {
     // Configure transporter
     const transporter = nodemailer.createTransport({
-      host: 'smtp.hostinger.com',
-      port: 465,
+      host: 'mail.feebe.in',
+      port: 587,
       secure: true,
       auth: {
         user: "info@feebe.in",
@@ -715,8 +715,8 @@ app.post('/send-email/accountRemovedStaff', async (req, res) => {
   try {
     // Configure transporter
     const transporter = nodemailer.createTransport({
-      host: 'smtp.hostinger.com',
-      port: 465,
+      host: 'mail.feebe.in',
+      port: 587,
       secure: true,
       auth: {
         user: "info@feebe.in",
