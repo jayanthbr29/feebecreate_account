@@ -237,7 +237,7 @@ app.post('/send-email', async (req, res) => {
     const transporter = nodemailer.createTransport({
       host: 'mail.feebe.in',
       port: 587,
-      secure: true,
+      secure: false,
       auth: {
         user: "info@feebe.in",
         pass: "Qwertyuiop1!@#7",
@@ -480,7 +480,7 @@ app.post('/send-email/accountRemovedParent', async (req, res) => {
     const transporter = nodemailer.createTransport({
       host: 'mail.feebe.in',
       port: 587,
-      secure: true,
+      secure: false,
       auth: {
         user: "info@feebe.in",
         pass: "Qwertyuiop1!@#",
@@ -717,7 +717,7 @@ app.post('/send-email/accountRemovedStaff', async (req, res) => {
     const transporter = nodemailer.createTransport({
       host: 'mail.feebe.in',
       port: 587,
-      secure: true,
+      secure: false,
       auth: {
         user: "info@feebe.in",
         pass: "Qwertyuiop1!@#7",
