@@ -199,7 +199,7 @@ app.post('/login', async (req, res) => {
       message = 'Account disabled';
     }
 
-    return res.status(401).json({ success: false, message });
+    return res.status(401).json({ success: false, message :error.message});
   }
 });
 
