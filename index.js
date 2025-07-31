@@ -158,28 +158,48 @@ app.get("/sendnotification", async (req, res) => {
 
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
+
+  // Basic input validation
   if (!email || !password) {
-    return res.status(400).send('Email and password are required');
+    return res.status(400).json({ success: false, message: 'Email and password are required' });
   }
+
   const lowerCaseEmail = email.toLowerCase();
-  const Usersnapshot = await db.collection('Users').where('email', '==', lowerCaseEmail).get();
-  if (Usersnapshot.empty) {
-    res.status(200).send({ success: false, message: "Invalid Email" });
 
-  } else {
-    const apiKey = 'AIzaSyALJ5R9lmKbxp6r2lVpKUc9_z3sb1tBJVY'; //This is required to identify your project
-    const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`;
-    try {
-      const { data } = await axios.post(url, {
-        email,
-        password,
-        // returnSecureToken: true,
-      });
+  const apiKey = process.env.FIREBASE_API_KEY || 'AIzaSyALJ5R9lmKbxp6r2lVpKUc9_z3sb1tBJVY';
+  const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`;
 
-      return res.status(200).json({ success: true, message: 'Login successful', idToken: data.idToken, user: data });
-    } catch (e) {
-      return res.status(200).json({ success: false, message: "Invalid Password" });
+  try {
+    const { data } = await axios.post(url, {
+      email: lowerCaseEmail,
+      password,
+      returnSecureToken: true,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Login successful',
+      idToken: data.idToken,
+      user: {
+        email: data.email,
+        localId: data.localId,
+        displayName: data.displayName,
+        // Avoid returning refreshToken unless needed
+      },
+    });
+  } catch (error) {
+    const errCode = error?.response?.data?.error?.message;
+
+    let message = 'Login failed';
+    if (errCode === 'EMAIL_NOT_FOUND') {
+      message = 'Email not registered';
+    } else if (errCode === 'INVALID_PASSWORD') {
+      message = 'Incorrect password';
+    } else if (errCode === 'USER_DISABLED') {
+      message = 'Account disabled';
     }
+
+    return res.status(401).json({ success: false, message });
   }
 });
 
