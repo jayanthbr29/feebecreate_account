@@ -239,7 +239,7 @@ app.post('/send-email', async (req, res) => {
       port: 465,
       secure: true,
       auth: {
-        user: "info@feebe.in",
+        user: "feebeial",
         pass: "Qwertyuiop1!@#",
       },
     });
@@ -482,7 +482,7 @@ app.post('/send-email/accountRemovedParent', async (req, res) => {
       port: 465,
       secure: true,
       auth: {
-        user: "info@feebe.in",
+        user: "feebeial",
         pass: "Qwertyuiop1!@#",
       },
     });
@@ -719,7 +719,7 @@ app.post('/send-email/accountRemovedStaff', async (req, res) => {
       port: 465,
       secure: true,
       auth: {
-        user: "info@feebe.in",
+        user: "feebeial",
         pass: "Qwertyuiop1!@#",
       },
     });
