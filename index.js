@@ -240,7 +240,7 @@ app.post('/send-email', async (req, res) => {
       secure: true,
       auth: {
         user: "info@feebe.in",
-        pass: "Qwertyuiop1!@#7",
+        pass: "Qwertyuiop1!@#",
       },
     });
 
@@ -720,7 +720,7 @@ app.post('/send-email/accountRemovedStaff', async (req, res) => {
       secure: true,
       auth: {
         user: "info@feebe.in",
-        pass: "Qwertyuiop1!@#7",
+        pass: "Qwertyuiop1!@#",
       },
     });
 
