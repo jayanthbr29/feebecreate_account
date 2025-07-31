@@ -156,16 +156,30 @@ app.get("/sendnotification", async (req, res) => {
 }
 );
 
+async function checkEmailExists(email) {
+  try {
+    const user = await admin.auth().getUserByEmail(email);
+    return { exists: true, user };
+  } catch (error) {
+    if (error.code === 'auth/user-not-found') {
+      return { exists: false };
+    }
+    // throw error;
+  }
+}
+
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
-  // Basic input validation
   if (!email || !password) {
     return res.status(400).json({ success: false, message: 'Email and password are required' });
   }
-
+  
   const lowerCaseEmail = email.toLowerCase();
-
+  const exists = await checkEmailExists(lowerCaseEmail);
+  if (!exists?.exists) {
+    return res.status(400).json({ success: false, message: 'Invalid email' });
+  }
   const apiKey = process.env.FIREBASE_API_KEY || 'AIzaSyALJ5R9lmKbxp6r2lVpKUc9_z3sb1tBJVY';
   const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`;
 
@@ -184,22 +198,45 @@ app.post('/login', async (req, res) => {
         email: data.email,
         localId: data.localId,
         displayName: data.displayName,
-        // Avoid returning refreshToken unless needed
       },
     });
   } catch (error) {
-    const errCode = error?.response?.data?.error?.message;
-
+    
+    const firebaseError = error?.response?.data?.error;
     let message = 'Login failed';
-    if (errCode === 'EMAIL_NOT_FOUND') {
-      message = 'Email not registered';
-    } else if (errCode === 'INVALID_PASSWORD') {
-      message = 'Incorrect password';
-    } else if (errCode === 'USER_DISABLED') {
-      message = 'Account disabled';
+
+    if (firebaseError) {
+      switch (firebaseError.message) {
+        case 'EMAIL_NOT_FOUND':
+          message = 'Invalid email address';
+          break;
+        case 'INVALID_PASSWORD':
+          message = 'Invalid credentials';
+          break;
+        case 'USER_DISABLED':
+          message = 'Account disabled';
+          break;
+        case 'INVALID_EMAIL':
+          message = 'Invalid email format';
+          break;
+        case 'TOO_MANY_ATTEMPTS_TRY_LATER':
+          message = 'Too many attempts. Try again later';
+          break;
+        case'INVALID_LOGIN_CREDENTIALS':
+          message = 'Invalid Password ';
+          break;
+        default:
+          message = firebaseError.message || 'Invalid credentials';
+      }
+    } else {
+      // Handle non-Firebase errors (network issues, etc.)
+      message = error.message || 'Login failed';
     }
 
-    return res.status(401).json({ success: false, message :error.message});
+    return res.status(401).json({
+      success: false,
+      message
+    });
   }
 });
 
@@ -1332,7 +1369,7 @@ iOS - https://apps.apple.com/in/app/feebe/id6741058480?source=ioscta`;
 );
 
 app.post('/send-sms/forgot-password', async (req, res) => {
-  const { userId,toPhoneNumber } = req.body;
+  const { userId, toPhoneNumber } = req.body;
   if (!userId) return res.status(400).json({ error: "Missing userId" });
   try {
 
@@ -1344,7 +1381,7 @@ app.post('/send-sms/forgot-password', async (req, res) => {
     const sendername = "FEEADM";
     const message = `To reset your password for Feebe, click the link below. If you didn't request this, please ignore this message.
     ${link}
-    Thank you`; 
+    Thank you`;
 
     const encodedMessage = encodeURIComponent(message);
 
