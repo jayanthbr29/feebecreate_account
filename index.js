@@ -22,6 +22,7 @@ app.use(express.json());
 const cors = require("cors");
 app.use(cors());
 
+
 const db = admin.firestore();
 const FieldValue = admin.firestore.FieldValue;
 
@@ -1530,88 +1531,206 @@ function isHEICFile(buffer) {
 
 app.post('/compress-from-url', async (req, res) => {
   const { imageUrl } = req.body;
-
   if (!imageUrl) {
     return res.status(400).json({ message: 'imageUrl is required in request body' });
   }
 
   try {
-    const response = await axios.get(imageUrl, { responseType: 'arraybuffer' });
-    let buffer = Buffer.from(response.data);
-    const contentType = response.headers['content-type'];
-    let ext = path.extname(imageUrl).toLowerCase();
+    let buffer;
+    const urlObj = new URL(imageUrl);
+    const bucket = admin.storage().bucket();
+    const isGCS  = urlObj.host === 'storage.googleapis.com';
+
+    if (isGCS) {
+      // ---- Direct download from GCS ----
+      // decode & split pathname into segments ["feebee-8578d","compressed",...]
+      const segments = decodeURIComponent(urlObj.pathname)
+        .split('/')
+        .filter(Boolean);
+      // if first segment === bucket.name, drop it
+      if (segments[0] === bucket.name) segments.shift();
+      // re-join into the true object path
+      const objectPath = segments.join('/');
+      // download → Buffer
+      [buffer] = await bucket.file(objectPath).download();
+    } else {
+      // ---- External URL via HTTP ----
+      const resp = await axios.get(imageUrl, {
+        responseType: 'arraybuffer',
+        timeout: 10_000,
+        maxContentLength: 50 * 1024 * 1024
+      });
+      buffer = Buffer.from(resp.data);
+    }
+
+    // ---- HEIC → JPEG conversion ----
     let convertedFromHEIC = false;
-
-    // Handle missing extension (detect from content-type)
-    if (!ext || ext === '') {
-      ext = contentType.includes('heic') ? '.heic' : contentType.includes('png') ? '.png' : '.jpg';
+    const extGuess = path.extname(urlObj.pathname).toLowerCase();
+    if (['.heic', '.heif'].includes(extGuess) || isHEICFile(buffer)) {
+      buffer = await heicConvert({
+        buffer,
+        format: 'JPEG',
+        quality: 1
+      });
+      convertedFromHEIC = true;
     }
 
-    // HEIC to JPEG conversion
-    if (ext === '.heic' || ext === '.heif' || isHEICFile(buffer)) {
-      try {
-        buffer = await heicConvert({
-          buffer,
-          format: 'JPEG',
-          quality: 1
-        });
-        convertedFromHEIC = true;
-        console.log('✅ Converted HEIC to JPEG');
-      } catch (err) {
-        return res.status(400).json({ message: 'Failed to convert HEIC to JPEG', error: err.message });
-      }
-    }
-
-    // Compress logic
-    const MAX_SIZE = 20 * 1024;
-    let compressedBuffer;
-    let quality = 80;
+    // ---- Compress via sharp ----
+    const MAX_SIZE = 20 * 1024; // 20 KB
+    let quality = 80, compressed;
     let success = false;
-
     for (; quality >= 10; quality -= 10) {
-      compressedBuffer = await sharp(buffer)
+      compressed = await sharp(buffer)
         .resize({ width: 1024 })
-        .rotate(Number(90))
+        .rotate()               // auto-orient
         .jpeg({ quality })
         .toBuffer();
-
-      if (compressedBuffer.length <= MAX_SIZE) {
+      if (compressed.length <= MAX_SIZE) {
         success = true;
         break;
       }
     }
-
     if (!success) {
       return res.status(400).json({ message: 'Could not compress image under 20 KB' });
     }
 
-    // Firebase upload
-    const bucket = admin.storage().bucket();
-    const timestamp = Date.now();
-    const fileName = `compressed/${timestamp}_${path.basename(imageUrl).replace(/\.[^/.]+$/, '')}.jpg`;
-    const file = bucket.file(fileName);
+    // ---- Save compressed → GCS ----
+    // build a clean filename from the original URL
+    const decodedPath = decodeURIComponent(urlObj.pathname);
+    const origExt     = path.extname(decodedPath) || '.jpg';
+    const baseName    = path.basename(decodedPath, origExt);
+    const fileName    = `compressed/${Date.now()}_${baseName}.jpg`;
 
-    await file.save(compressedBuffer, {
+    const file = bucket.file(fileName);
+    await file.save(compressed, {
       contentType: 'image/jpeg',
       metadata: { cacheControl: 'public, max-age=31536000' }
     });
 
-    // Signed URL
+    // ---- Generate signed URL expiring Jan 1, 2050 ----
     const [signedUrl] = await file.getSignedUrl({
       action: 'read',
-      expires: Date.now() + 60 * 60 * 1000 // 1 hour
+      expires: new Date('2050-01-01T00:00:00.000Z')
     });
 
+    // ---- Respond ----
     return res.status(200).json({
-      message: 'Image URL compressed successfully',
+      message: 'Image compressed successfully',
       imageUrl: signedUrl,
-      originalFormat: convertedFromHEIC ? 'heic' : ext.replace('.', ''),
-      sizeKB: (compressedBuffer.length / 1024).toFixed(2),
+      originalFormat: convertedFromHEIC ? 'heic' : origExt.replace('.', ''),
+      sizeKB: (compressed.length / 1024).toFixed(2),
       qualityUsed: quality
     });
 
   } catch (err) {
     console.error('URL compression error:', err);
-    return res.status(500).json({ message: 'Failed to process image URL', error: err.message });
+    if (err.code === 'ETIMEDOUT') {
+      return res.status(504).json({ message: 'Upstream request timed out' });
+    }
+    return res.status(500).json({
+      message: 'Failed to process image URL',
+      error: err.message
+    });
+  }
+});
+
+
+const bucket = admin.storage().bucket();
+
+// ──────────────────────────────────────────────────────────────────────────────
+// 2) Helpers
+// ──────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Extracts a clean filePath from your expired signed URL:
+ *   - strips query params
+ *   - decodes twice to undo “%252F” → “/”
+ */
+function extractFilePath(signedUrl) {
+  if (typeof signedUrl !== 'string') {
+    throw new Error('signedUrl must be a string');
+  }
+  // 1) strip off ? and everything after
+  const base = signedUrl.split('?')[0];
+  // 2) capture everything after “/compressed/”
+  const m = base.match(/\/compressed\/(.+)$/);
+  if (!m) throw new Error('Invalid URL format – missing /compressed/');
+  // 3) double-decode
+  const once  = decodeURIComponent(m[1]);
+  const twice = decodeURIComponent(once);
+  return `compressed/${twice}`;
+}
+
+/**
+ * Permanently makes a file public and returns its public URL.
+ */
+async function makePublicUrl(filePath) {
+  const file = bucket.file(filePath);
+  const [exists] = await file.exists();
+  if (!exists) throw new Error(`No such file at path: ${filePath}`);
+  await file.makePublic();
+  return `https://storage.googleapis.com/${bucket.name}/${filePath}`;
+}
+
+/**
+ * Generates a fresh signed URL (default TTL: 1 hour).
+ */
+async function createSignedUrl(filePath, ttlSeconds = 3600) {
+  const file = bucket.file(filePath);
+  const [exists] = await file.exists();
+  if (!exists) throw new Error(`No such file at path: ${filePath}`);
+  const [url] = await file.getSignedUrl({
+    action: 'read',
+    expires: Date.now() + ttlSeconds * 1000,
+  });
+  return url;
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// 3) Express App & Endpoint
+// ──────────────────────────────────────────────────────────────────────────────
+
+
+
+
+
+app.post('/refresh-signed-url', async (req, res) => {
+  const { url } = req.body;
+  if (!url) {
+    return res.status(400).json({ message: 'url is required in request body' });
+  }
+
+  try {
+    // Parse the incoming signed URL
+    const urlObj = new URL(url);
+    const bucket = admin.storage().bucket();
+
+    // Decode & split the pathname into segments
+    const segments = decodeURIComponent(urlObj.pathname)
+      .split('/')
+      .filter(Boolean); // e.g. ["feebee-8578d","compressed",...]
+
+    // If the first segment is the bucket name, remove it
+    if (segments[0] === bucket.name) {
+      segments.shift();
+    }
+
+    // Re-join to get the object path
+    const objectPath = segments.join('/'); // e.g. "compressed/…/file.jpg"
+    const file = bucket.file(objectPath);
+
+    // Generate a new signed URL expiring Jan 1, 2050
+    const [newSignedUrl] = await file.getSignedUrl({
+      action: 'read',
+      expires: new Date('2050-01-01T00:00:00.000Z')
+    });
+
+    return res.status(200).json({ url: newSignedUrl });
+  } catch (err) {
+    console.error('Error refreshing signed URL:', err);
+    return res.status(500).json({
+      message: 'Failed to refresh signed URL',
+      error: err.message
+    });
   }
 });
