@@ -1700,26 +1700,36 @@ app.post('/refresh-signed-url', async (req, res) => {
     return res.status(400).json({ message: 'url is required in request body' });
   }
 
+  let urlObj;
   try {
-    // Parse the incoming signed URL
-    const urlObj = new URL(url);
-    const bucket = admin.storage().bucket();
+    urlObj = new URL(url);
+  } catch {
+    return res.status(400).json({ message: 'invalid URL' });
+  }
 
-    // Decode & split the pathname into segments
+  // Only treat it as a signed GCS URL if it has the signature parameters
+  const isSignedGCS = urlObj.host === 'storage.googleapis.com'
+    && urlObj.searchParams.has('GoogleAccessId')
+    && urlObj.searchParams.has('Signature')
+    && urlObj.searchParams.has('Expires');
+
+  if (!isSignedGCS) {
+    // Not a signed URL → return as-is
+    return res.status(200).json({ url });
+  }
+
+  try {
+    const bucket = admin.storage().bucket();
+    // decode & split off the bucket name from the pathname
     const segments = decodeURIComponent(urlObj.pathname)
       .split('/')
-      .filter(Boolean); // e.g. ["feebee-8578d","compressed",...]
+      .filter(Boolean);
+    if (segments[0] === bucket.name) segments.shift();
+    const objectPath = segments.join('/');
 
-    // If the first segment is the bucket name, remove it
-    if (segments[0] === bucket.name) {
-      segments.shift();
-    }
-
-    // Re-join to get the object path
-    const objectPath = segments.join('/'); // e.g. "compressed/…/file.jpg"
     const file = bucket.file(objectPath);
 
-    // Generate a new signed URL expiring Jan 1, 2050
+    // generate new signed URL expiring Jan 1, 2050
     const [newSignedUrl] = await file.getSignedUrl({
       action: 'read',
       expires: new Date('2050-01-01T00:00:00.000Z')
