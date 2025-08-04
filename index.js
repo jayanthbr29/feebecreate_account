@@ -1744,3 +1744,40 @@ app.post('/refresh-signed-url', async (req, res) => {
     });
   }
 });
+
+app.post('/fix-orientation', async (req, res) => {
+  const { imageUrl } = req.body;
+  if (!imageUrl) {
+    return res.status(400).json({ error: 'Please provide an imageUrl in the request body.' });
+  }
+
+  try {
+    // 1. Download the image as a Buffer
+    const response = await axios.get(imageUrl, { responseType: 'arraybuffer' });
+    const inputBuffer = Buffer.from(response.data);
+
+    // 2. Use Sharp to read metadata
+    const image = sharp(inputBuffer);
+    const metadata = await image.metadata();
+
+    let outputBuffer;
+    // EXIF orientation 1 = “normal”. Anything else needs rotating.
+    if (metadata.orientation && metadata.orientation !== 1) {
+      // auto-rotate based on EXIF and strip the orientation tag
+      outputBuffer = await image.rotate().withMetadata({ orientation: 1 }).toBuffer();
+      console.log(`Rotated image from orientation ${metadata.orientation}`);
+    } else {
+      // no rotation needed
+      outputBuffer = inputBuffer;
+      console.log('Image orientation is normal; no rotation applied.');
+    }
+
+    // 3. Send back the resulting image
+    res.type(metadata.format || 'jpeg');
+    res.send(outputBuffer);
+
+  } catch (err) {
+    console.error('Error processing image:', err);
+    res.status(500).json({ error: 'Failed to process the image.' });
+  }
+});
