@@ -1750,6 +1750,7 @@ fs.ensureDirSync(IMAGES_DIR);
 // 2. Serve that directory statically at /images
 app.use('/images', express.static(IMAGES_DIR));
 
+
 app.post('/fix-orientation', async (req, res) => {
   const { imageUrl } = req.body;
   if (!imageUrl) {
@@ -1757,36 +1758,38 @@ app.post('/fix-orientation', async (req, res) => {
   }
 
   try {
-    // Download original image
+    // Fetch the image
     const response = await axios.get(imageUrl, { responseType: 'arraybuffer' });
     const buffer = Buffer.from(response.data);
 
-    // Read EXIF orientation
+    // Read EXIF and auto-rotate if needed
     const img = sharp(buffer);
     const meta = await img.metadata();
-
-    // Rotate if needed
-    let out = buffer;
+    let outBuf = buffer;
     if (meta.orientation && meta.orientation !== 1) {
-      out = await img.rotate().withMetadata({ orientation: 1 }).toBuffer();
+      outBuf = await img.rotate().withMetadata({ orientation: 1 }).toBuffer();
     }
 
-    // Pick extension
-    const ext = (meta.format === 'png' ? 'png' : 'jpg');
+    // Pick a safe extension
+    const ext = ['jpeg','png','webp','gif'].includes(meta.format) ? meta.format : 'jpg';
     const filename = `${uuidv4()}.${ext}`;
-    const filepath = path.join(IMAGES_DIR, filename);
+    const outPath = path.join(IMAGES_DIR, filename);
 
-    // Write file
-    await fs.writeFile(filepath, out);
+    // Write it out
+    await fs.writeFile(outPath, outBuf);
 
-    // Build public URL
+    // Build and return the URL
     const publicUrl = `${req.protocol}://${req.get('host')}/images/${filename}`;
+    return res.json({ url: publicUrl });
 
-    // Return JSON with URL
-    res.json({ url: publicUrl });
   } catch (err) {
-    console.error('Error processing image:', err);
-    res.status(500).json({ error: 'Failed to process the image.' });
+    // Log full stack on the server
+    console.error('🔥 /fix-orientation error:', err);
+
+    // Return just the message back so we know what failed
+    return res
+      .status(500)
+      .json({ error: err.message || 'Unknown processing error' });
   }
 });
 
