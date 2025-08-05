@@ -1793,54 +1793,73 @@ app.post('/fix-orientation', async (req, res) => {
   }
 });
 
+
 app.post("/rotate-image", async (req, res) => {
   const { imageUrl } = req.body;
- 
+
   if (!imageUrl) {
     return res.status(400).json({
       success: false,
       error: "imageUrl is required in the request body",
     });
   }
- 
+
   try {
     // 1. Download the image
     const response = await axios.get(imageUrl, { responseType: "arraybuffer" });
     const buffer = Buffer.from(response.data);
- 
+
     // 2. Rotate 90° clockwise
     const rotatedBuffer = await sharp(buffer)
       .rotate(90)
       .withMetadata()
       .toBuffer();
- 
-    // 3. Extract bucket name and file path from URL
+
+    // 3. Extract bucket and file path (supports both Firebase and GCS URLs)
     const url = new URL(imageUrl);
-    const pathParts = url.pathname.split("/").filter((part) => part.length > 0);
-    const bucketName = pathParts[0];
-    const filePath = decodeURIComponent(pathParts.slice(1).join("/"));
- 
-    // 4. Get the file reference
+    let bucketName, filePath;
+
+    if (url.hostname === "storage.googleapis.com") {
+      // Google Cloud Storage URL (https://storage.googleapis.com/bucket/path/to/file.jpg)
+      const pathParts = url.pathname
+        .split("/")
+        .filter((part) => part.length > 0);
+      bucketName = pathParts[0];
+      filePath = decodeURIComponent(pathParts.slice(1).join("/"));
+    } else if (url.hostname === "firebasestorage.googleapis.com") {
+      // Firebase Storage URL (https://firebasestorage.googleapis.com/v0/b/bucket/o/path%2Fto%2Ffile.jpg?alt=media)
+      const match = url.pathname.match(/\/v0\/b\/([^\/]+)\/o\/(.+)/);
+      if (!match) throw new Error("Invalid Firebase Storage URL format");
+      bucketName = match[1];
+      filePath = decodeURIComponent(
+        match[2].split("?")[0].replace(/%2F/g, "/")
+      );
+    } else {
+      throw new Error(
+        "Unsupported URL format. Must be Google Cloud Storage or Firebase Storage."
+      );
+    }
+
+    // 4. Upload rotated image (overwrite original, set public)
     const bucket = admin.storage().bucket(`gs://${bucketName}`);
     const file = bucket.file(filePath);
- 
-    // 5. Upload with overwrite and make public
+
     await file.save(rotatedBuffer, {
       metadata: {
         contentType: `image/${
           (await sharp(rotatedBuffer).metadata()).format || "jpeg"
         }`,
-        cacheControl: "public, max-age=31536000", // 1 year cache
+        cacheControl: "public, max-age=31536000", // Cache for 1 year
       },
       resumable: false,
-      public: true, // This makes the file publicly accessible
+      public: true, // Makes the file publicly accessible
     });
- 
-    // 6. Generate the permanent public URL
+
+    // 5. Generate permanent public URL (no token, never expires)
     const permanentUrl = `https://storage.googleapis.com/${bucketName}/${encodeURIComponent(
       filePath
     )}`;
- 
+
     res.json({
       success: true,
       imageUrl: permanentUrl, // This URL will never expire
