@@ -1781,3 +1781,66 @@ app.post('/fix-orientation', async (req, res) => {
     res.status(500).json({ error: 'Failed to process the image.' });
   }
 });
+
+app.post("/rotate-image", async (req, res) => {
+  const { imageUrl } = req.body;
+ 
+  if (!imageUrl) {
+    return res.status(400).json({
+      success: false,
+      error: "imageUrl is required in the request body",
+    });
+  }
+ 
+  try {
+    // 1. Download the image
+    const response = await axios.get(imageUrl, { responseType: "arraybuffer" });
+    const buffer = Buffer.from(response.data);
+ 
+    // 2. Rotate 90° clockwise
+    const rotatedBuffer = await sharp(buffer)
+      .rotate(90)
+      .withMetadata()
+      .toBuffer();
+ 
+    // 3. Extract bucket name and file path from URL
+    const url = new URL(imageUrl);
+    const pathParts = url.pathname.split("/").filter((part) => part.length > 0);
+    const bucketName = pathParts[0];
+    const filePath = decodeURIComponent(pathParts.slice(1).join("/"));
+ 
+    // 4. Get the file reference
+    const bucket = admin.storage().bucket(`gs://${bucketName}`);
+    const file = bucket.file(filePath);
+ 
+    // 5. Upload with overwrite and make public
+    await file.save(rotatedBuffer, {
+      metadata: {
+        contentType: `image/${
+          (await sharp(rotatedBuffer).metadata()).format || "jpeg"
+        }`,
+        cacheControl: "public, max-age=31536000", // 1 year cache
+      },
+      resumable: false,
+      public: true, // This makes the file publicly accessible
+    });
+ 
+    // 6. Generate the permanent public URL
+    const permanentUrl = `https://storage.googleapis.com/${bucketName}/${encodeURIComponent(
+      filePath
+    )}`;
+ 
+    res.json({
+      success: true,
+      imageUrl: permanentUrl, // This URL will never expire
+      message: "Image rotated and updated successfully",
+    });
+  } catch (error) {
+    console.error("Rotation Error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to rotate and update image",
+      details: error.message,
+    });
+  }
+});
