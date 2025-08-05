@@ -1744,6 +1744,11 @@ app.post('/refresh-signed-url', async (req, res) => {
     });
   }
 });
+const IMAGES_DIR = path.join(__dirname, 'public', 'images');
+fs.ensureDirSync(IMAGES_DIR);
+
+// 2. Serve that directory statically at /images
+app.use('/images', express.static(IMAGES_DIR));
 
 app.post('/fix-orientation', async (req, res) => {
   const { imageUrl } = req.body;
@@ -1752,30 +1757,33 @@ app.post('/fix-orientation', async (req, res) => {
   }
 
   try {
-    // 1. Download the image as a Buffer
+    // Download original image
     const response = await axios.get(imageUrl, { responseType: 'arraybuffer' });
-    const inputBuffer = Buffer.from(response.data);
+    const buffer = Buffer.from(response.data);
 
-    // 2. Use Sharp to read metadata
-    const image = sharp(inputBuffer);
-    const metadata = await image.metadata();
+    // Read EXIF orientation
+    const img = sharp(buffer);
+    const meta = await img.metadata();
 
-    let outputBuffer;
-    // EXIF orientation 1 = “normal”. Anything else needs rotating.
-    if (metadata.orientation && metadata.orientation !== 1) {
-      // auto-rotate based on EXIF and strip the orientation tag
-      outputBuffer = await image.rotate().withMetadata({ orientation: 1 }).toBuffer();
-      console.log(`Rotated image from orientation ${metadata.orientation}`);
-    } else {
-      // no rotation needed
-      outputBuffer = inputBuffer;
-      console.log('Image orientation is normal; no rotation applied.');
+    // Rotate if needed
+    let out = buffer;
+    if (meta.orientation && meta.orientation !== 1) {
+      out = await img.rotate().withMetadata({ orientation: 1 }).toBuffer();
     }
 
-    // 3. Send back the resulting image
-    res.type(metadata.format || 'jpeg');
-    res.send(outputBuffer);
+    // Pick extension
+    const ext = (meta.format === 'png' ? 'png' : 'jpg');
+    const filename = `${uuidv4()}.${ext}`;
+    const filepath = path.join(IMAGES_DIR, filename);
 
+    // Write file
+    await fs.writeFile(filepath, out);
+
+    // Build public URL
+    const publicUrl = `${req.protocol}://${req.get('host')}/images/${filename}`;
+
+    // Return JSON with URL
+    res.json({ url: publicUrl });
   } catch (err) {
     console.error('Error processing image:', err);
     res.status(500).json({ error: 'Failed to process the image.' });
