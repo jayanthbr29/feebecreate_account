@@ -1744,54 +1744,54 @@ app.post('/refresh-signed-url', async (req, res) => {
     });
   }
 });
-const IMAGES_DIR = path.join(__dirname, 'public', 'images');
-fs.ensureDirSync(IMAGES_DIR);
+// const IMAGES_DIR = path.join(__dirname, 'public', 'images');
+// fs.ensureDirSync(IMAGES_DIR);
 
-// 2. Serve that directory statically at /images
-app.use('/images', express.static(IMAGES_DIR));
+// // 2. Serve that directory statically at /images
+// app.use('/images', express.static(IMAGES_DIR));
 
 
-app.post('/fix-orientation', async (req, res) => {
-  const { imageUrl } = req.body;
-  if (!imageUrl) {
-    return res.status(400).json({ error: 'Please provide an imageUrl in the request body.' });
-  }
+// app.post('/fix-orientation', async (req, res) => {
+//   const { imageUrl } = req.body;
+//   if (!imageUrl) {
+//     return res.status(400).json({ error: 'Please provide an imageUrl in the request body.' });
+//   }
 
-  try {
-    // Fetch the image
-    const response = await axios.get(imageUrl, { responseType: 'arraybuffer' });
-    const buffer = Buffer.from(response.data);
+//   try {
+//     // Fetch the image
+//     const response = await axios.get(imageUrl, { responseType: 'arraybuffer' });
+//     const buffer = Buffer.from(response.data);
 
-    // Read EXIF and auto-rotate if needed
-    const img = sharp(buffer);
-    const meta = await img.metadata();
-    let outBuf = buffer;
-    if (meta.orientation && meta.orientation !== 1) {
-      outBuf = await img.rotate().withMetadata({ orientation: 1 }).toBuffer();
-    }
+//     // Read EXIF and auto-rotate if needed
+//     const img = sharp(buffer);
+//     const meta = await img.metadata();
+//     let outBuf = buffer;
+//     if (meta.orientation && meta.orientation !== 1) {
+//       outBuf = await img.rotate().withMetadata({ orientation: 1 }).toBuffer();
+//     }
 
-    // Pick a safe extension
-    const ext = ['jpeg','png','webp','gif'].includes(meta.format) ? meta.format : 'jpg';
-    const filename = `${uuidv4()}.${ext}`;
-    const outPath = path.join(IMAGES_DIR, filename);
+//     // Pick a safe extension
+//     const ext = ['jpeg','png','webp','gif'].includes(meta.format) ? meta.format : 'jpg';
+//     const filename = `${uuidv4()}.${ext}`;
+//     const outPath = path.join(IMAGES_DIR, filename);
 
-    // Write it out
-    await fs.writeFile(outPath, outBuf);
+//     // Write it out
+//     await fs.writeFile(outPath, outBuf);
 
-    // Build and return the URL
-    const publicUrl = `${req.protocol}://${req.get('host')}/images/${filename}`;
-    return res.json({ url: publicUrl });
+//     // Build and return the URL
+//     const publicUrl = `${req.protocol}://${req.get('host')}/images/${filename}`;
+//     return res.json({ url: publicUrl });
 
-  } catch (err) {
-    // Log full stack on the server
-    console.error('🔥 /fix-orientation error:', err);
+//   } catch (err) {
+//     // Log full stack on the server
+//     console.error('🔥 /fix-orientation error:', err);
 
-    // Return just the message back so we know what failed
-    return res
-      .status(500)
-      .json({ error: err.message || 'Unknown processing error' });
-  }
-});
+//     // Return just the message back so we know what failed
+//     return res
+//       .status(500)
+//       .json({ error: err.message || 'Unknown processing error' });
+//   }
+// });
 
 
 app.post("/rotate-image", async (req, res) => {
