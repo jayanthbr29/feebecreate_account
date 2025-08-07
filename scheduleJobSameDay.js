@@ -53,7 +53,7 @@ exports.sendScheduledNotificationsSameDay = async () => {
 
             // Filter notices occurring on the target date
             const todaysNotices = notices.filter(notice => {
-                const noticeDate = notice.Event_date.toDate();
+                const noticeDate = notice?.Event_date.toDate();
                 return noticeDate >= targetDate && noticeDate <= endOfDay;
             });
             if (todaysNotices.length === 0) continue; // No notices for tomorrow in this document
