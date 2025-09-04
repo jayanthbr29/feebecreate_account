@@ -50,7 +50,7 @@ exports.sendScheduledNotifications = async () => {
 
             // Filter notices occurring on the target date
             const todaysNotices = notices.filter(notice => {
-                const noticeDate = notice.Event_date.toDate();
+                const noticeDate = notice?.Event_date.toDate();
                 return noticeDate >= targetDate && noticeDate < endOfDay;
             });
 

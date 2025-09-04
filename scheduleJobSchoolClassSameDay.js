@@ -76,7 +76,7 @@ exports.sendScheduledNotificationsSchoolClassSameDay = async () => {
 
             // Filter notices occurring on the target date
             const todaysNotices = notices.filter(notice => {
-                const noticeDate = notice.Event_date.toDate();
+                const noticeDate = notice?.Event_date.toDate();
                 return noticeDate >= startTimestamp && noticeDate <= endTimestamp;
             });
 
@@ -90,8 +90,8 @@ exports.sendScheduledNotificationsSchoolClassSameDay = async () => {
             // console.log("teacherTokens", teacherTokens);
             // console.log("parentTokens", parentTokens);
 
-            const combinedTokens = [...teacherTokens, ...parentTokens, ...adminTokens];
-
+            // const combinedTokens = [...teacherTokens, ...parentTokens, ...adminTokens];
+            const combinedTokens = [...parentTokens];
             if (combinedTokens.length === 0) continue; // No tokens to send to
 
             // Create notification payloads for each notice
