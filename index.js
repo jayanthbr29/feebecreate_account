@@ -175,7 +175,7 @@ app.post('/login', async (req, res) => {
   if (!email || !password) {
     return res.status(400).json({ success: false, message: 'Email and password are required' });
   }
-  
+
   const lowerCaseEmail = email.toLowerCase();
   const exists = await checkEmailExists(lowerCaseEmail);
   if (!exists?.exists) {
@@ -202,7 +202,7 @@ app.post('/login', async (req, res) => {
       },
     });
   } catch (error) {
-    
+
     const firebaseError = error?.response?.data?.error;
     let message = 'Login failed';
 
@@ -223,7 +223,7 @@ app.post('/login', async (req, res) => {
         case 'TOO_MANY_ATTEMPTS_TRY_LATER':
           message = 'Too many attempts. Try again later';
           break;
-        case'INVALID_LOGIN_CREDENTIALS':
+        case 'INVALID_LOGIN_CREDENTIALS':
           message = 'Invalid Password ';
           break;
         default:
@@ -292,13 +292,13 @@ app.post('/send-email', async (req, res) => {
 
   try {
     // Configure transporter
-    const transporter = nodemailer.createTransport({
-      host: 'mail.feebe.in',
-      port: 465,
+     const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: 465,  
       secure: true,
       auth: {
-        user: "info@feebe.in",
-        pass: "Qwertyuiop1!@#",
+        user: process.env.EMAIL_USER_NAME,
+        pass: process.env.EMAIL_USER_PASSWORD,
       },
     });
 
@@ -510,7 +510,7 @@ app.post('/send-email', async (req, res) => {
 
     // Mail options
     const mailOptions = {
-      from: "info@feebe.in",
+      from: process.env.FROM_MAIL,
       to: toEmail,
       subject: "Welcome to Feebee, Your Account Has Been Created Successfully!",
       html: emailTemplate,
@@ -536,12 +536,12 @@ app.post('/send-email/accountRemovedParent', async (req, res) => {
   try {
     // Configure transporter
     const transporter = nodemailer.createTransport({
-      host: 'mail.feebe.in',
-      port: 465,
+      host: process.env.EMAIL_HOST,
+      port: 465,  
       secure: true,
       auth: {
-        user: "info@feebe.in",
-        pass: "Qwertyuiop1!@#",
+        user: process.env.EMAIL_USER_NAME,
+        pass: process.env.EMAIL_USER_PASSWORD,
       },
     });
 
@@ -746,7 +746,7 @@ app.post('/send-email/accountRemovedParent', async (req, res) => {
 
     // Mail options
     const mailOptions = {
-      from: "info@feebe.in",
+      from: process.env.FROM_MAIL ,
       to: toEmail,
       subject: "Feebee, Your Account Has Been Removed!",
       html: emailTemplateParent,
@@ -773,12 +773,12 @@ app.post('/send-email/accountRemovedStaff', async (req, res) => {
   try {
     // Configure transporter
     const transporter = nodemailer.createTransport({
-      host: 'mail.feebe.in',
-      port: 465,
+      host: process.env.EMAIL_HOST,
+      port: 465,  
       secure: true,
       auth: {
-        user: "info@feebe.in",
-        pass: "Qwertyuiop1!@#",
+        user: process.env.EMAIL_USER_NAME,
+        pass: process.env.EMAIL_USER_PASSWORD,
       },
     });
 
@@ -1003,8 +1003,8 @@ app.post('/send-sms', async (req, res) => {
   }
   try {
 
-    const username = "feebe";
-    const password = "123456";
+    const username = process.env.SMS_USERNAME;
+    const password = process.env.SMS_PASSWORD;
     const sendername = "FEEBON";
     const message = `Welcome!
 Your preschool has added you to Feebe, the official app for sharing updates about your child.
@@ -1054,8 +1054,8 @@ app.post('/send-sms/admin-onboarding', async (req, res) => {
   }
   try {
 
-    const username = "feebe";
-    const password = "123456";
+    const username = process.env.SMS_USERNAME;
+    const password = process.env.SMS_PASSWORD;
     const sendername = "FEEBON";
     const message = `Welcome to Feebe!
 You've been added as an admin by your preschool to Feebe- the official preschool app.
@@ -1105,8 +1105,8 @@ app.post('/send-sms/Preschool-onboarding-message', async (req, res) => {
   }
   try {
 
-    const username = "feebe";
-    const password = "123456";
+    const username = process.env.SMS_USERNAME;
+    const password = process.env.SMS_PASSWORD;
     const sendername = "FEEBON";
     const message = `Welcome to Feebe!
 Thank you for choosing Feebe for your preschool's management.
@@ -1156,8 +1156,8 @@ app.post('/send-sms/removing-parent', async (req, res) => {
   }
   try {
 
-    const username = "feebe";
-    const password = "123456";
+    const username = process.env.SMS_USERNAME;
+    const password = process.env.SMS_PASSWORD;
     const sendername = "FEEBOF";
     const message = `Dear parent,
 
@@ -1198,8 +1198,8 @@ app.post('/send-sms/removing-preschool', async (req, res) => {
   }
   try {
 
-    const username = "feebe";
-    const password = "123456";
+    const username = process.env.SMS_USERNAME;
+    const password = process.env.SMS_PASSWORD;
     const sendername = "FEEBOF";
     const message = `Dear Ma'am/Sir,
     
@@ -1240,8 +1240,8 @@ app.post('/send-sms/removing-teacher', async (req, res) => {
   }
   try {
 
-    const username = "feebe";
-    const password = "123456";
+    const username = process.env.SMS_USERNAME;
+    const password = process.env.SMS_PASSWORD;
     const sendername = "FEEBOF";
     const message = `Dear teacher,
     
@@ -1282,8 +1282,8 @@ app.post('/send-sms/removing-admin', async (req, res) => {
   }
   try {
 
-    const username = "feebe";
-    const password = "123456";
+    const username = process.env.SMS_USERNAME;
+    const password = process.env.SMS_PASSWORD;
     const sendername = "FEEBOF";
     const message = `Dear Admin,
     
@@ -1324,8 +1324,8 @@ app.post('/send-sms/teacher-onboarding', async (req, res) => {
   }
   try {
 
-    const username = "feebe";
-    const password = "123456";
+    const username = process.env.SMS_USERNAME;
+    const password = process.env.SMS_PASSWORD;
     const sendername = "FEEBON";
     const message = `Welcome to Feebe!
     
@@ -1377,8 +1377,8 @@ app.post('/send-sms/forgot-password', async (req, res) => {
     const token = await generateToken(userId);
     const link = `https://feebe.in/secure-link?token=${token}`;
     // return res.json({ link });
-    const username = "feebe";
-    const password = "123456";
+    const username = process.env.SMS_USERNAME;
+    const password = process.env.SMS_PASSWORD;
     const sendername = "FEEADM";
     const message = `To reset your password for Feebe, click the link below. If you didn't request this, please ignore this message.
     ${link}
